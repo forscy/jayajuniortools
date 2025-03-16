@@ -5,7 +5,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     volumes:
-      - ./backend/src:/app/src
+      - ./backend:/backend
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"
     environment:
