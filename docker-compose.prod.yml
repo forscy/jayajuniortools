@@ -6,7 +6,8 @@ services:
       dockerfile: Dockerfile
       target: production
     volumes:
-      - ./backend/src:/app/src
+      - ./backend:/backend
+      - /backend/node_modules
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"
     environment:

@@ -6,9 +6,14 @@ services:
       dockerfile: Dockerfile
       target: development
     volumes:
-      - ./backend/src:/app/src
+      - ./backend:/backend
+      - jj_be:/backend/node_modules
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"
     environment:
       - NODE_ENV=development
     command: npm run dev
+
+volumes:
+  jj_be:
+    driver: local
