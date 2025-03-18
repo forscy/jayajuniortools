@@ -17,7 +17,7 @@ model User {
   updatedAt DateTime @updatedAt
   orders    Order[]
   reviews   Review[]
-  roles     UserRole[]
+  role      Role @default(BUYER)
   wishlist  Wishlist[]
   notifications NotificationRecipient[]
 }
@@ -28,19 +28,13 @@ enum UserStatus {
   SUSPENDED
 }
 
-model UserRole {
-  id     Int  @id @default(autoincrement())
-  userId Int
-  role   Role
-  User   User @relation(fields: [userId], references: [id])
-}
+
 
 enum Role {
   OWNER
   INVENTORY_MANAGER
   BUYER
   SHOPKEEPER
-  GUEST
 }
 
 model Store {
