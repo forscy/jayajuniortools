@@ -3,57 +3,86 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-async function main() {
-  // Mengecek apakah sudah ada user dengan role OWNER
-  const existingOwner = await prisma.user.findFirst({
-    where: {
+const createUsers = async () => {
+  const hashPassword = await bcrypt.hash('securepassword', 10); // Meng-hash password
+
+  const users = [
+    {
+      name: 'owner',
+      email: 'owner@gmail.com',
+      password: hashPassword,
       role: Role.OWNER,
+      
     },
-  });
-
-  // Jika tidak ada owner, maka buat user owner baru
-  if (!existingOwner) {
-    await prisma.user.create({
-      data: {
-        name: 'Roy', // Nama Owner
-        email: 'owner@jayajuniortools.com', // Email Owner
-        password: await bcrypt.hash('securepassword', 10), // Password (pastikan di-hash di aplikasi nyata)
-        status: UserStatus.ACTIVE, // Status akun
-        role: Role.OWNER, // Peran sebagai Owner
-      },
-    });
-    console.log('Owner user has been created!');
-  } else {
-    console.log('Owner user already exists!');
-  }
-
-  // create buyer
-  const existingBuyer = await prisma.user.findFirst({
-    where: {
+    {
+      name: 'shopkeeper1',
+      email: 'shopkeeper1@gmail.com',
+      password: hashPassword,
+      role: Role.SHOPKEEPER,
+      
+    },
+    {
+      name: 'shopkeeper2',
+      email: 'shopkeeper2@gmail.com',
+      password: hashPassword,
+      role: Role.SHOPKEEPER,
+      
+    },
+    {
+      name: 'shopkeeper3',
+      email: 'shopkeeper3@gmail.com',
+      password: hashPassword,
+      role: Role.SHOPKEEPER,
+      
+    },
+    {
+      name: 'inventorymanager',
+      email: 'inventorymanager@gmail.com',
+      password: hashPassword,
+      role: Role.INVENTORY_MANAGER,
+      
+    },
+    // Membuat 10 pengguna Buyer dengan email buyer1, buyer2, ... buyer10
+    ...Array.from({ length: 10 }, (_, index) => ({
+      name: `buyer${index + 1}`,
+      email: `buyer${index + 1}@gmail.com`,
+      password: hashPassword,
       role: Role.BUYER,
-    },
-  });
+      
+    })),
+  ];
 
-  if (!existingBuyer) {
-    await prisma.user.create({
-      data: {
-        name: 'Buyer', // Nama Buyer
-        email: 'buyer1@gmail.com', // Email Buyer
-        password: await bcrypt.hash('securepassword', 10), // Password (pastikan di-hash di aplikasi nyata)
-        status: UserStatus.ACTIVE, // Status akun
-        role: Role.BUYER, // Peran sebagai Buyer
-      },
+  // Menambahkan data pengguna ke dalam database jika di database belum ada
+  for (const user of users) {
+    const existingUser = await prisma.user.findUnique({
+      where: { email: user.email },
     });
-    console.log('Buyer user has been created!');
-  } else {
-    console.log('Buyer user already exists!');
-  }
-}
 
-main()
-  .catch((e) => {
+    if (!existingUser) {
+      await prisma.user.create({
+        data: {
+          name: user.name,
+          email: user.email,
+          password: user.password,
+          status: UserStatus.ACTIVE,
+          role: user.role,
+          
+        },
+      });
+    }
+  }
+  
+  console.log('Seeder untuk user berhasil dijalankan!');
+};
+
+const runSeeder = async () => {
+  try {
+    await createUsers();
+  } catch (e) {
     console.error(e);
-  })
-  .finally(async () => {
+  } finally {
     await prisma.$disconnect();
-  });
+  }
+};
+
+runSeeder();
