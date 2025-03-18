@@ -143,3 +143,31 @@ export const createAccountService = async ({
     throw new Error(error.message || "Failed to create user");
   }
 };
+
+
+interface SuspendAccountData {
+  userId: number;
+}
+
+export const suspendAccountService = async ({ userId }: SuspendAccountData) => {
+  try {
+    // Cari user berdasarkan userId
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Update status menjadi SUSPENDED
+    const suspendedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { status: UserStatus.SUSPENDED },
+    });
+
+    return { message: 'User suspended successfully', userId: suspendedUser.id };
+  } catch (error: any) {
+    throw new Error(error.message || 'Error during account suspension');
+  }
+};
