@@ -171,3 +171,36 @@ export const suspendAccountService = async ({ userId }: SuspendAccountData) => {
     throw new Error(error.message || 'Error during account suspension');
   }
 };
+
+
+interface DeleteAccountData {
+  userId: number;
+}
+
+export const deleteAccountService = async ({ userId }: DeleteAccountData) => {
+  try {
+    // Cari user berdasarkan userId
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    await prisma.wishlist.deleteMany({
+      where: {
+        userId: userId,
+      },
+    });
+
+    // Hapus akun pengguna
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    return { message: 'User deleted successfully', userId };
+  } catch (error: any) {
+    throw new Error(error.message || 'Error during account deletion');
+  }
+};
