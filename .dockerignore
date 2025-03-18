@@ -8,9 +8,6 @@ yarn-error.log
 # Docker
 *.dockerfile
 
-# Environment files
-.env
-
 # VSCode settings
 .vscode/
 
