@@ -24,7 +24,7 @@ COPY . .
 
 RUN npm install -g nodemon
 
-CMD ["nodemon", "src/index.ts"]
+CMD ["npm", "run", "dev"]
 
 # Tahap 3: Production
 FROM node:20 AS production

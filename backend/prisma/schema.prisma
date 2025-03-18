@@ -12,28 +12,29 @@ model User {
   name      String
   email     String  @unique
   password  String
+  status    UserStatus @default(ACTIVE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   orders    Order[]
   reviews   Review[]
-  roles     UserRole[]
+  role      Role @default(BUYER)
   wishlist  Wishlist[]
   notifications NotificationRecipient[]
 }
 
-model UserRole {
-  id     Int  @id @default(autoincrement())
-  userId Int
-  role   Role
-  User   User @relation(fields: [userId], references: [id])
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
 }
+
+
 
 enum Role {
   OWNER
   INVENTORY_MANAGER
   BUYER
   SHOPKEEPER
-  GUEST
 }
 
 model Store {
