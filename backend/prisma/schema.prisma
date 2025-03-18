@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,4 +5,241 @@ generator client {
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int     @id @default(autoincrement())
+  name      String
+  email     String  @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+  reviews   Review[]
+  roles     UserRole[]
+  wishlist  Wishlist[]
+  notifications NotificationRecipient[]
+}
+
+model UserRole {
+  id     Int  @id @default(autoincrement())
+  userId Int
+  role   Role
+  User   User @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  OWNER
+  INVENTORY_MANAGER
+  BUYER
+  SHOPKEEPER
+  GUEST
+}
+
+model Store {
+  id          Int    @id @default(autoincrement())
+  name        String
+  address     String
+  phone       String?
+  email       String?
+  description String?
+  logo        String?
+  banner      String?
+  operationalHours OperationalHour[]
+  returnPolicy ReturnPolicy[]
+}
+
+model OperationalHour {
+  id         Int    @id @default(autoincrement())
+  storeId    Int
+  day        String
+  openTime   String
+  closeTime  String
+  Store      Store  @relation(fields: [storeId], references: [id])
+}
+
+model Product {
+  id         Int      @id @default(autoincrement())
+  name       String
+  description String?
+  price      Float
+  stock      Int
+  sku        String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  categories ProductCategory[]
+  images     ProductImage[]
+  reviews    Review[]
+  stockHistory StockHistory[]
+  units      ProductUnit[]
+  priceHistory PriceHistory[]
+  wishlist  Wishlist[]
+  orderItems OrderItem[]
+  discount   Discount[]
+}
+
+model PriceHistory {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  oldPrice  Float
+  newPrice  Float
+  changedAt DateTime @default(now())
+  Product   Product  @relation(fields: [productId], references: [id])
+}
+
+model Wishlist {
+  id        Int  @id @default(autoincrement())
+  userId    Int
+  productId Int
+  createdAt DateTime @default(now())
+  User      User    @relation(fields: [userId], references: [id])
+  Product   Product @relation(fields: [productId], references: [id])
+}
+
+model ProductImage {
+  id         Int    @id @default(autoincrement())
+  productId  Int
+  url        String
+  Product    Product @relation(fields: [productId], references: [id])
+}
+
+model Category {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  products ProductCategory[]
+}
+
+model ProductCategory {
+  id        Int  @id @default(autoincrement())
+  productId Int
+  categoryId Int
+  Product   Product @relation(fields: [productId], references: [id])
+  Category  Category @relation(fields: [categoryId], references: [id])
+}
+
+model StockHistory {
+  id         Int      @id @default(autoincrement())
+  productId  Int
+  quantity   Int
+  changeType StockChangeType
+  createdAt  DateTime @default(now())
+  Product    Product  @relation(fields: [productId], references: [id])
+}
+
+enum StockChangeType {
+  ADDITION
+  REMOVAL
+}
+
+model ProductUnit {
+  id        Int    @id @default(autoincrement())
+  productId Int
+  unit      String
+  price     Float
+  Product   Product @relation(fields: [productId], references: [id])
+}
+
+model Order {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  status     OrderStatus @default(PENDING)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  items      OrderItem[]
+  transaction Transaction[]
+  User       User    @relation(fields: [userId], references: [id])
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSED
+  SHIPPED
+  COMPLETED
+  CANCELLED
+}
+
+model OrderItem {
+  id         Int     @id @default(autoincrement())
+  orderId    Int
+  productId  Int
+  quantity   Int
+  price      Float
+  Order      Order   @relation(fields: [orderId], references: [id])
+  Product    Product @relation(fields: [productId], references: [id])
+}
+
+model Review {
+  id         Int     @id @default(autoincrement())
+  userId     Int
+  productId  Int
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+  User       User    @relation(fields: [userId], references: [id])
+  Product    Product @relation(fields: [productId], references: [id])
+}
+
+model Discount {
+  id         Int      @id @default(autoincrement())
+  productId  Int
+  type       DiscountType
+  value      Float
+  startDate  DateTime
+  endDate    DateTime
+  Product    Product @relation(fields: [productId], references: [id])
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+model Transaction {
+  id         Int      @id @default(autoincrement())
+  orderId    Int
+  totalAmount Float
+  status     TransactionStatus @default(PENDING)
+  createdAt  DateTime @default(now())
+  Order      Order    @relation(fields: [orderId], references: [id])
+  payment    Payment[]
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model Payment {
+  id              Int    @id @default(autoincrement())
+  transactionId   Int
+  paymentGateway  String
+  paymentReference String
+  status          TransactionStatus
+  createdAt       DateTime @default(now())
+  Transaction     Transaction @relation(fields: [transactionId], references: [id])
+}
+
+model ReturnPolicy {
+  id         Int      @id @default(autoincrement())
+  storeId    Int
+  policyText String
+  returnDays Int
+  Store      Store  @relation(fields: [storeId], references: [id])
+}
+
+model Notification {
+  id         Int      @id @default(autoincrement())
+  message    String
+  isRead     Boolean @default(false)
+  createdAt  DateTime @default(now())
+  recipients NotificationRecipient[]
+}
+
+model NotificationRecipient {
+  id             Int  @id @default(autoincrement())
+  notificationId Int
+  userId         Int
+  Notification   Notification @relation(fields: [notificationId], references: [id])
+  User           User @relation(fields: [userId], references: [id])
 }

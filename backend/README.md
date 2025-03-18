@@ -228,6 +228,13 @@ Dengan memahami fungsi dan tujuan dari setiap dependensi di atas, Anda dapat mem
 
 
 
+## ```DATABASE CONFIGURATION```
+```
+npx prisma generate
+```
+```
+npx prisma migrate dev --name init
+```
 
 
 
