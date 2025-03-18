@@ -1,6 +1,6 @@
 // src/routes/auth.routes.ts
 import { Router } from 'express';
-import { signUp, signIn, changePassword, createAccount } from '../controllers/auth.controller';
+import { signUp, signIn, changePassword, createAccount, suspendAccount } from '../controllers/auth.controller';
 import { authenticateJWT, verifyOwnerRole } from '../middlewares/auth.middleware';
 
 const router = Router();
@@ -17,5 +17,7 @@ router.put('/change-password', authenticateJWT, changePassword);
 // Route untuk membuat akun baru (hanya bisa diakses oleh Owner)
 router.post('/create-account', authenticateJWT, verifyOwnerRole, createAccount);
 
+// Route untuk suspend account (hanya bisa diakses oleh Owner)
+router.post('/suspend-account', authenticateJWT, verifyOwnerRole, suspendAccount);
 
 export default router;
