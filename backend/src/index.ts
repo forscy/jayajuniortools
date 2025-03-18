@@ -1,10 +1,15 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response } from "express";
+
+// import { PrismaClient } from "@prisma/client";
+// const prisma = new PrismaClient();
 
 const app = express();
-const port = 3000;
+// Middleware untuk parsing JSON body
+app.use(express.json());
+const port = process.env.BACKEND_PORT || 3003;
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('Halo, Dunia!');
+app.get("/", (req: Request, res: Response) => {
+  res.send("Halo, World! ");
 });
 
 app.listen(port, () => {
