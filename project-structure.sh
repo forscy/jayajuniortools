@@ -10,19 +10,19 @@ jayajuniortools
 │   │   └── migrations/             # Menyimpan folder migrasi untuk Prisma
 │   ├── src
 │   │   ├── controllers             # Folder untuk controller API
-│   │   │   ├── userController.ts
-│   │   │   ├── productController.ts
-│   │   │   └── orderController.ts
+│   │   │   ├── user.controller.ts
+│   │   │   ├── product.controller.ts
+│   │   │   └── order.controller.ts
 │   │   ├── services                # Folder untuk service yang menangani logika bisnis
-│   │   │   ├── userService.ts
-│   │   │   ├── productService.ts
-│   │   │   └── orderService.ts
+│   │   │   ├── user.service.ts
+│   │   │   ├── product.service.ts
+│   │   │   └── order.service.ts
 │   │   ├── routes                  # Folder untuk routing
-│   │   │   ├── userRoutes.ts
-│   │   │   ├── productRoutes.ts
-│   │   │   └── orderRoutes.ts
+│   │   │   ├── user.routes.ts
+│   │   │   ├── product.routes.ts
+│   │   │   └── order.routes.ts
 │   │   ├── middlewares             # Folder untuk middleware seperti validasi, otentikasi
-│   │   │   └── authMiddleware.ts
+│   │   │   └── auth.midleware.ts
 │   │   ├── utils                   # Utility functions yang umum digunakan
 │   │   │   └── logger.ts
 │   │   ├── app.ts                  # File utama untuk setup express app

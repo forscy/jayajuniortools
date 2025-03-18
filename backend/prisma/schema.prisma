@@ -12,6 +12,7 @@ model User {
   name      String
   email     String  @unique
   password  String
+  status    UserStatus @default(ACTIVE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   orders    Order[]
@@ -19,6 +20,12 @@ model User {
   roles     UserRole[]
   wishlist  Wishlist[]
   notifications NotificationRecipient[]
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
 }
 
 model UserRole {

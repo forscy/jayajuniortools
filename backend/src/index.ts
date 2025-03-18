@@ -1,7 +1,5 @@
 import express, { Request, Response } from "express";
-
-// import { PrismaClient } from "@prisma/client";
-// const prisma = new PrismaClient();
+import indexRouter from "./routes/index.routes";
 
 const app = express();
 // Middleware untuk parsing JSON body
@@ -11,6 +9,9 @@ const port = process.env.BACKEND_PORT || 3003;
 app.get("/", (req: Request, res: Response) => {
   res.send("Halo, World! ");
 });
+
+// Routes
+app.use('/api', indexRouter);
 
 app.listen(port, () => {
   console.log(`Server berjalan di http://localhost:${port}`);
