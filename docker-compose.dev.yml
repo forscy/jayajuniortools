@@ -12,7 +12,6 @@ services:
       - "${BACKEND_PORT}:${BACKEND_PORT}"
     environment:
       - NODE_ENV=development
-    command: npm run dev
 
 volumes:
   jj_be:

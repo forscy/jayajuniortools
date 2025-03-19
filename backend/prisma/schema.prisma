@@ -12,33 +12,34 @@ model User {
   name      String
   email     String  @unique
   password  String
+  status    UserStatus @default(ACTIVE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   orders    Order[]
   reviews   Review[]
-  roles     UserRole[]
+  role      Role @default(BUYER)
   wishlist  Wishlist[]
   notifications NotificationRecipient[]
 }
 
-model UserRole {
-  id     Int  @id @default(autoincrement())
-  userId Int
-  role   Role
-  User   User @relation(fields: [userId], references: [id])
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
 }
+
+
 
 enum Role {
   OWNER
   INVENTORY_MANAGER
   BUYER
   SHOPKEEPER
-  GUEST
 }
 
 model Store {
   id          Int    @id @default(autoincrement())
-  name        String
+  name        String @unique
   address     String
   phone       String?
   email       String?
@@ -52,10 +53,20 @@ model Store {
 model OperationalHour {
   id         Int    @id @default(autoincrement())
   storeId    Int
-  day        String
+  day        Day
   openTime   String
   closeTime  String
   Store      Store  @relation(fields: [storeId], references: [id])
+}
+
+enum Day {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
 }
 
 model Product {
