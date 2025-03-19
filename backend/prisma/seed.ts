@@ -1,4 +1,4 @@
-import { PrismaClient, Role, UserStatus } from '@prisma/client';
+import { Day, OperationalHour, PrismaClient, Role, UserStatus } from '@prisma/client';
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -75,9 +75,106 @@ const createUsers = async () => {
   console.log('Seeder untuk user berhasil dijalankan!');
 };
 
+
+// seeder for create store profile
+const createStoreProfile = async () => {
+  const store = {
+    name: 'Jaya Junior Tools',
+    address: 'Jl. Jalan Sini No. 123',
+    phone: '08123456789',
+    email: 'jayajuniortools@gmail.com',
+    description: 'Menjual berbagai macam perkakas tukang dan mesin-mesin perkakas',
+  };
+
+  const existingStore = await prisma.store.findFirst({
+    where: {
+      name: store.name,
+    },
+  });
+
+  if (!existingStore) {
+    await prisma.store.create({
+      data: store,
+    });
+  }
+
+  // create operational hours
+  const operationalHours: OperationalHour[] = [
+    {
+      id: 1,
+      storeId: existingStore?.id || 1,
+      day: Day.MONDAY,
+      openTime: '07:00:00',
+      closeTime: '17:00:00',
+    },
+    // repeat for the rest of the days
+    {
+      id: 2,
+      storeId: existingStore?.id || 1,
+      day: Day.TUESDAY,
+      openTime: '07:00:00',
+      closeTime: '17:00:00',
+    },
+    {
+      id: 3,
+      storeId: existingStore?.id || 1,
+      day: Day.WEDNESDAY,
+      openTime: '07:00:00',
+      closeTime: '17:00:00',
+    },
+    {
+      id: 4,
+      storeId: existingStore?.id || 1,
+      day: Day.THURSDAY,
+      openTime: '07:00:00',
+      closeTime: '17:00:00',
+    },
+    {
+      id: 5,
+      storeId: existingStore?.id || 1,
+      day: Day.FRIDAY,
+      openTime: '07:00:00',
+      closeTime: '17:00:00',
+    },
+    {
+      id: 6,
+      storeId: existingStore?.id || 1,
+      day: Day.SATURDAY,
+      openTime: '07:00:00',
+      closeTime: '17:00:00',
+    },
+    {
+      id: 7,
+      storeId: existingStore?.id || 1,
+      day: Day.SUNDAY,
+      openTime: '09:00:00',
+      closeTime: '17:00:00',
+    },
+  ]
+
+  // write to database
+  for (const operationalHour of operationalHours) {
+    const existingOperationalHour = await prisma.operationalHour.findUnique({
+      where: {
+        id: operationalHour.id,
+      },
+    });
+
+    if (!existingOperationalHour) {
+      await prisma.operationalHour.create({
+        data: operationalHour,
+      });
+    }
+  }
+
+  console.log('Seeder untuk store berhasil dijalankan!');
+}
+
+
 const runSeeder = async () => {
   try {
     await createUsers();
+    await createStoreProfile();
   } catch (e) {
     console.error(e);
   } finally {
