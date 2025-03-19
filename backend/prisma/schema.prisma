@@ -39,7 +39,7 @@ enum Role {
 
 model Store {
   id          Int    @id @default(autoincrement())
-  name        String
+  name        String @unique
   address     String
   phone       String?
   email       String?
@@ -53,10 +53,20 @@ model Store {
 model OperationalHour {
   id         Int    @id @default(autoincrement())
   storeId    Int
-  day        String
+  day        Day
   openTime   String
   closeTime  String
   Store      Store  @relation(fields: [storeId], references: [id])
+}
+
+enum Day {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
 }
 
 model Product {

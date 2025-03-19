@@ -60,3 +60,46 @@ export const createAccount = async (req: Request, res: Response) => {
     return sendResponse(res, 500, 'error', error.message || 'Failed to create user');
   }
 };
+
+export const suspendAccount = async (req: Request, res: Response) => {
+  const { userId } = req.body;
+
+  try {
+    const result = await authService.suspendAccountService({ userId });
+    return sendResponse(res, 200, 'success', result.message, { userId: result.userId });
+  } catch (error: any) {
+    return sendResponse(res, 400, 'error', error.message);
+  }
+};
+
+
+export const deleteAccount = async (req: Request, res: Response) => {
+  const { userId } = req.body; // Mengambil userId dari request body
+
+  try {
+    const result = await authService.deleteAccountService({ userId });
+    return sendResponse(res, 200, 'success', result.message, { userId: result.userId });
+  } catch (error: any) {
+    return sendResponse(res, 400, 'error', error.message);
+  }
+};
+
+
+
+export const editAccount = async (req: Request, res: Response) => {
+  const { userId, name, email, role, status } = req.body;
+
+  try {
+    const result = await authService.editAccountService({
+      userId,
+      name,
+      email,
+      role,
+      status,
+    });
+
+    return sendResponse(res, 200, 'success', result.message, { userId: result.userId });
+  } catch (error: any) {
+    return sendResponse(res, 400, 'error', error.message);
+  }
+};

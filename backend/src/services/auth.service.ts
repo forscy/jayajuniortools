@@ -143,3 +143,108 @@ export const createAccountService = async ({
     throw new Error(error.message || "Failed to create user");
   }
 };
+
+
+interface SuspendAccountData {
+  userId: number;
+}
+
+export const suspendAccountService = async ({ userId }: SuspendAccountData) => {
+  try {
+    // Cari user berdasarkan userId
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Update status menjadi SUSPENDED
+    const suspendedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { status: UserStatus.SUSPENDED },
+    });
+
+    return { message: 'User suspended successfully', userId: suspendedUser.id };
+  } catch (error: any) {
+    throw new Error(error.message || 'Error during account suspension');
+  }
+};
+
+
+interface DeleteAccountData {
+  userId: number;
+}
+
+export const deleteAccountService = async ({ userId }: DeleteAccountData) => {
+  try {
+    // Cari user berdasarkan userId
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    await prisma.wishlist.deleteMany({
+      where: {
+        userId: userId,
+      },
+    });
+
+    // Hapus akun pengguna
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    return { message: 'User deleted successfully', userId };
+  } catch (error: any) {
+    throw new Error(error.message || 'Error during account deletion');
+  }
+};
+
+
+
+interface EditAccountData {
+  userId: number;
+  name?: string;
+  email?: string;
+  role?: Role;
+  status?: UserStatus;
+}
+
+export const editAccountService = async ({
+  userId,
+  name,
+  email,
+  role,
+  status,
+}: EditAccountData) => {
+  try {
+    // Cari user berdasarkan userId
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Perbarui data pengguna
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        name: name ?? user.name,
+        email: email ?? user.email,
+        status: status ?? user.status,
+        role: role ?? user.role,
+      },
+    });
+
+    return { message: 'User updated successfully', userId: updatedUser.id };
+  } catch (error: any) {
+    throw new Error(error.message || 'Error during account update');
+  }
+};
