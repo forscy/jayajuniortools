@@ -1,16 +1,13 @@
 import React from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import JoySignInSideTemplate from "./pages/SignInPage";
-import HomePage from "./pages/HomePage";
+import AppRoutes from "./routes/AppRoute";
+import { Provider } from "react-redux";
+import { store } from "./redux/store";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<JoySignInSideTemplate />} />
-      </Routes>
-    </BrowserRouter>
+    <Provider store={store}>
+        <AppRoutes />
+    </Provider>
   );
 }
 

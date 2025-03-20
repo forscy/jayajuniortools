@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import * as authService from '../services/auth.service';
 import {  sendResponse } from '../utils/responseWrapper';
 import { Role } from '@prisma/client';
+import { clearTokenCookie, setTokenCookies } from '../utils/auth';
 
 export const signUp = async (req: Request, res: Response) => {
   const { name, email, password } = req.body;
@@ -20,6 +21,8 @@ export const signIn = async (req: Request, res: Response) => {
 
   try {
     const result = await authService.signInService(email, password);
+    // Kirim token JWT ke client
+    setTokenCookies(res, result.token);
     return sendResponse(res, 200, 'success', result.message, { token: result.token });
   } catch (error: any) {
     return sendResponse(res, 400, 'error', error.message);
@@ -78,6 +81,7 @@ export const deleteAccount = async (req: Request, res: Response) => {
 
   try {
     const result = await authService.deleteAccountService({ userId });
+    clearTokenCookie(res); // Hapus cookie token
     return sendResponse(res, 200, 'success', result.message, { userId: result.userId });
   } catch (error: any) {
     return sendResponse(res, 400, 'error', error.message);

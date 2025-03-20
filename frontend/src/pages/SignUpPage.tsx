@@ -13,11 +13,6 @@ import Input from "@mui/joy/Input";
 import Typography from "@mui/joy/Typography";
 import Stack from "@mui/joy/Stack";
 import GoogleIcon from "../assets/images/GoogleIcon";
-import Header from "../components/Header";
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { signIn, clearError } from "../redux/slices/authSlice";
 
 interface FormElements extends HTMLFormControlsCollection {
   email: HTMLInputElement;
@@ -29,48 +24,9 @@ interface SignInFormElement extends HTMLFormElement {
   readonly elements: FormElements;
 }
 
+// const customTheme = extendTheme({ defaultColorScheme: 'dark' });
+
 export default function SignInPage() {
-  const dispatch = useAppDispatch();
-  const { loading, error, isAuthenticated } = useAppSelector(
-    (state) => state.auth
-  );
-  const navigate = useNavigate();
-
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/");
-    }
-
-    // Clear any previous errors when component mounts
-    return () => {
-      dispatch(clearError());
-    };
-  }, [isAuthenticated, navigate, dispatch]);
-
-  const handleSignIn = async (event: React.FormEvent<SignInFormElement>) => {
-    event.preventDefault();
-    const formElements = event.currentTarget.elements;
-
-    const credentials = {
-      email: formElements.email.value,
-      password: formElements.password.value,
-    };
-
-    const isPersistent = formElements.persistent.checked;
-
-    // If login is successful, the token will be handled by the authSlice
-    // We just need to dispatch the signIn action
-    await dispatch(signIn(credentials));
-
-    // Store persistence preference if needed
-    if (isPersistent) {
-      localStorage.setItem("persistentLogin", "true");
-    } else {
-      localStorage.removeItem("persistentLogin");
-    }
-  };
-
   return (
     <CssVarsProvider disableTransitionOnChange>
       <CssBaseline />
@@ -82,7 +38,6 @@ export default function SignInPage() {
           },
         }}
       />
-      <Header categories={[]} />
       <Box
         sx={(theme) => ({
           width: { xs: "100%", md: "50vw" },
@@ -134,12 +89,12 @@ export default function SignInPage() {
             <Stack sx={{ gap: 4, mb: 2 }}>
               <Stack sx={{ gap: 1 }}>
                 <Typography component="h1" level="h3">
-                  Masuk
+                  Daftar
                 </Typography>
                 <Typography level="body-sm">
-                  Tidak punya akun?{" "}
-                  <Link href="/signup" level="title-sm">
-                    Daftar!
+                  Sudah punya akun?{" "}
+                  <Link href="/signin" level="title-sm">
+                    Masuk!
                   </Link>
                 </Typography>
               </Stack>
@@ -162,12 +117,18 @@ export default function SignInPage() {
               atau
             </Divider>
             <Stack sx={{ gap: 4, mt: 2 }}>
-              {error && (
-                <Typography color="danger" fontSize="sm">
-                  {error}
-                </Typography>
-              )}
-              <form onSubmit={handleSignIn}>
+              <form
+                onSubmit={(event: React.FormEvent<SignInFormElement>) => {
+                  event.preventDefault();
+                  const formElements = event.currentTarget.elements;
+                  const data = {
+                    email: formElements.email.value,
+                    password: formElements.password.value,
+                    persistent: formElements.persistent.checked,
+                  };
+                  alert(JSON.stringify(data, null, 2));
+                }}
+              >
                 <FormControl required>
                   <FormLabel>Email</FormLabel>
                   <Input type="email" name="email" />
@@ -185,16 +146,11 @@ export default function SignInPage() {
                     }}
                   >
                     <Checkbox size="sm" label="Ingat saya" name="persistent" />
-                    <Link level="title-sm" href="/forgot-password">
+                    <Link level="title-sm" href="#replace-with-a-link">
                       Lupa password?
                     </Link>
                   </Box>
-                  <Button
-                    type="submit"
-                    fullWidth
-                    loading={loading}
-                    disabled={loading}
-                  >
+                  <Button type="submit" fullWidth>
                     Masuk
                   </Button>
                 </Stack>
