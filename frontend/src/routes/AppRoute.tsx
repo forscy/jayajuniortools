@@ -1,6 +1,6 @@
 // src/routes/AppRoutes.tsx
 import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Role } from "../types/index";
 import SignInPage from "../pages/SignInPage";
 // import Register from '../components/Register';
@@ -14,6 +14,7 @@ import HomePage from "../pages/HomePage";
 import UnauthorizedPage from "../pages/UnauthorizedPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import PlaceholderPage from "../pages/PlaceholderPage";
+import SignUpPage from "../pages/SignUpPage";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -26,7 +27,7 @@ const AppRoutes: React.FC = () => {
           element={<PlaceholderPage pageTitle="Cart Page" />}
         />
         <Route path="/signin" element={<SignInPage />} />
-        <Route path="/signup" element={<SignInPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
         {/* Routes yang memerlukan autentikasi */}

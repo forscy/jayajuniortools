@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
+import { getTokenInLocalStorage } from "../utils/localStorageUtil";
 
 // Definisikan tipe umum untuk struktur respons API dengan code numerik
 export interface ApiResponse<T> {
@@ -16,11 +17,23 @@ export interface ApiResponse<T> {
 export abstract class BaseController {
   protected api: AxiosInstance;
 
-  constructor(baseURL: string, withCredentials = true) {
+  constructor(baseURL: string, withCredentials = false, headers?: any) {
     this.api = axios.create({
       baseURL,
       withCredentials: withCredentials, // Jika perlu, bisa sesuaikan
+      headers: headers
     });
+  }
+
+  // Metode untuk menetapkan header Authorization dengan token
+  protected setAuthHeader() {
+    const token = getTokenInLocalStorage();
+    if (token) {
+      this.api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      delete this.api.defaults.headers.common['Authorization'];
+    }
+    return this;
   }
 
   // Metode GET umum untuk mengambil data dengan struktur respons yang sesuai

@@ -8,14 +8,24 @@ import {
   Button,
   Chip,
   CircularProgress,
+  Avatar,
+  Menu,
+  MenuItem,
+  Divider,
 } from "@mui/joy";
 import MenuIcon from "@mui/icons-material/Menu";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import SearchIcon from "@mui/icons-material/Search";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-import { Link } from "react-router-dom";
+import LogoutIcon from "@mui/icons-material/Logout";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import { Link, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "../redux/store";
+import { logoutUser } from "../redux/slices/authSlice";
 import ColorSchemeToggle from "./ColorSchemeTogle";
+import { useAppDispatch } from "../redux/hooks";
 
 interface Category {
   id: number;
@@ -29,6 +39,13 @@ interface HeaderProps {
 export default function Header({ categories }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  const { isAuthenticated, user } = useSelector(
+    (state: RootState) => state.auth
+  );
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -38,6 +55,20 @@ export default function Header({ categories }: HeaderProps) {
   const handleCategoryClick = () => {
     setLoading(true);
     setTimeout(() => setLoading(false), 1000);
+  };
+
+  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    dispatch(logoutUser());
+    handleProfileMenuClose();
+    navigate("/");
   };
 
   return (
@@ -82,13 +113,23 @@ export default function Header({ categories }: HeaderProps) {
 
           {/* Main Navigation - New Addition */}
           <Box sx={{ display: { xs: "none", md: "flex" }, gap: 2, ml: 4 }}>
-            <Button variant="plain" color="neutral" href="/">
+            <Button variant="plain" color="neutral" component={Link} to="/">
               Home
             </Button>
-            <Button variant="plain" color="neutral" href="/products">
+            <Button
+              variant="plain"
+              color="neutral"
+              component={Link}
+              to="/products"
+            >
               Products
             </Button>
-            <Button variant="plain" color="neutral" href="/best-sellers">
+            <Button
+              variant="plain"
+              color="neutral"
+              component={Link}
+              to="/best-sellers"
+            >
               Best Sellers
             </Button>
           </Box>
@@ -128,16 +169,71 @@ export default function Header({ categories }: HeaderProps) {
             <IconButton variant="outlined" color="neutral">
               <ShoppingCartIcon />
             </IconButton>
-            <Link to="/signin" style={{ textDecoration: "none" }}>
-              <Button
-                variant="outlined"
-                color="neutral"
-                startDecorator={<PersonOutlineIcon />}
-                sx={{ display: { xs: "none", sm: "flex" } }}
-              >
-                Masuk
-              </Button>
-            </Link>
+
+            {/* Conditional rendering based on auth status */}
+            {isAuthenticated && user ? (
+              <>
+                <IconButton
+                  variant="outlined"
+                  color="neutral"
+                  onClick={
+                    // kalo dah kebuka itu close, kalo belum kebuka itu open
+                    anchorEl ? handleProfileMenuClose : handleProfileMenuOpen
+                  }
+                >
+                  <Avatar
+                    size="sm"
+                    alt={user.name}
+                    sx={{
+                      "--Avatar-size": "30px",
+                      border: "2px solid",
+                      borderColor: "primary.500",
+                    }}
+                  >
+                    {user.name?.charAt(0).toUpperCase()}
+                  </Avatar>
+                </IconButton>
+
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl)}
+                  onClose={handleProfileMenuClose}
+                  placement="bottom-end"
+                  style={{
+                    zIndex: 9999,
+                  }}
+                >
+                  <MenuItem disabled>
+                    <Typography level="body-sm">{user.email}</Typography>
+                  </MenuItem>
+                  <Divider />
+                  <MenuItem
+                    component={Link}
+                    to="/profile"
+                    onClick={handleProfileMenuClose}
+                  >
+                    <AccountCircleIcon sx={{ mr: 1 }} fontSize="small" />
+                    Profile
+                  </MenuItem>
+                  <MenuItem onClick={handleLogout}>
+                    <LogoutIcon sx={{ mr: 1 }} fontSize="small" />
+                    Logout
+                  </MenuItem>
+                </Menu>
+              </>
+            ) : (
+              <Link to="/signin" style={{ textDecoration: "none" }}>
+                <Button
+                  variant="outlined"
+                  color="neutral"
+                  startDecorator={<PersonOutlineIcon />}
+                  sx={{ display: { xs: "none", sm: "flex" } }}
+                >
+                  Masuk
+                </Button>
+              </Link>
+            )}
+
             <ColorSchemeToggle />
           </Box>
         </Box>

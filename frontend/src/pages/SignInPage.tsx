@@ -8,7 +8,8 @@ import Checkbox from "@mui/joy/Checkbox";
 import Divider from "@mui/joy/Divider";
 import FormControl from "@mui/joy/FormControl";
 import FormLabel from "@mui/joy/FormLabel";
-import Link from "@mui/joy/Link";
+// import Link from "@mui/joy/Link";
+import { Link }  from "react-router-dom";
 import Input from "@mui/joy/Input";
 import Typography from "@mui/joy/Typography";
 import Stack from "@mui/joy/Stack";
@@ -138,7 +139,7 @@ export default function SignInPage() {
                 </Typography>
                 <Typography level="body-sm">
                   Tidak punya akun?{" "}
-                  <Link href="/signup" level="title-sm">
+                  <Link to="/signup">
                     Daftar!
                   </Link>
                 </Typography>
@@ -185,7 +186,7 @@ export default function SignInPage() {
                     }}
                   >
                     <Checkbox size="sm" label="Ingat saya" name="persistent" />
-                    <Link level="title-sm" href="/forgot-password">
+                    <Link to="/forgot-password">
                       Lupa password?
                     </Link>
                   </Box>

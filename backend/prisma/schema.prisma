@@ -8,9 +8,9 @@ datasource db {
 }
 
 model User {
-  id        Int     @id @default(autoincrement())
+  // id        Int     @id @default(autoincrement())
   name      String
-  email     String  @unique
+  email     String  @id @unique
   password  String
   status    UserStatus @default(ACTIVE)
   createdAt DateTime @default(now())
@@ -100,10 +100,10 @@ model PriceHistory {
 
 model Wishlist {
   id        Int  @id @default(autoincrement())
-  userId    Int
+  email     String
   productId Int
   createdAt DateTime @default(now())
-  User      User    @relation(fields: [userId], references: [id])
+  User      User    @relation(fields: [email], references: [email])
   Product   Product @relation(fields: [productId], references: [id])
 }
 
@@ -152,13 +152,13 @@ model ProductUnit {
 
 model Order {
   id         Int      @id @default(autoincrement())
-  userId     Int
+  email      String
   status     OrderStatus @default(PENDING)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   items      OrderItem[]
   transaction Transaction[]
-  User       User    @relation(fields: [userId], references: [id])
+  User       User    @relation(fields: [email], references: [email])
 }
 
 enum OrderStatus {
@@ -181,12 +181,12 @@ model OrderItem {
 
 model Review {
   id         Int     @id @default(autoincrement())
-  userId     Int
+  email      String
   productId  Int
   rating     Int
   comment    String?
   createdAt  DateTime @default(now())
-  User       User    @relation(fields: [userId], references: [id])
+  User       User    @relation(fields: [email], references: [email])
   Product    Product @relation(fields: [productId], references: [id])
 }
 
@@ -250,7 +250,7 @@ model Notification {
 model NotificationRecipient {
   id             Int  @id @default(autoincrement())
   notificationId Int
-  userId         Int
+  email          String
   Notification   Notification @relation(fields: [notificationId], references: [id])
-  User           User @relation(fields: [userId], references: [id])
+  User           User @relation(fields: [email], references: [email])
 }

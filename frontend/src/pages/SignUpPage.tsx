@@ -8,25 +8,64 @@ import Checkbox from "@mui/joy/Checkbox";
 import Divider from "@mui/joy/Divider";
 import FormControl from "@mui/joy/FormControl";
 import FormLabel from "@mui/joy/FormLabel";
-import Link from "@mui/joy/Link";
+// import Link from "@mui/joy/Link";
+import { Link }  from "react-router-dom";
 import Input from "@mui/joy/Input";
 import Typography from "@mui/joy/Typography";
 import Stack from "@mui/joy/Stack";
 import GoogleIcon from "../assets/images/GoogleIcon";
+import Header from "../components/Header";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { signUp, clearError } from "../redux/slices/authSlice";
 
 interface FormElements extends HTMLFormControlsCollection {
+  name: HTMLInputElement;
   email: HTMLInputElement;
   password: HTMLInputElement;
-  persistent: HTMLInputElement;
 }
 
 interface SignInFormElement extends HTMLFormElement {
   readonly elements: FormElements;
 }
 
-// const customTheme = extendTheme({ defaultColorScheme: 'dark' });
-
 export default function SignInPage() {
+  const dispatch = useAppDispatch();
+  const { loading, error, isAuthenticated } = useAppSelector(
+    (state) => state.auth
+  );
+  const navigate = useNavigate();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/");
+    }
+
+    // Clear any previous errors when component mounts
+    return () => {
+      dispatch(clearError());
+    };
+  }, [isAuthenticated, navigate, dispatch]);
+
+  const handleSignUp = async (event: React.FormEvent<SignInFormElement>) => {
+    event.preventDefault();
+    const formElements = event.currentTarget.elements;
+
+    const credentials = {
+      name: formElements.name.value,
+      email: formElements.email.value,
+      password: formElements.password.value,
+    };
+
+
+    // If login is successful, the token will be handled by the authSlice
+    // We just need to dispatch the signIn action
+    await dispatch(signUp(credentials));
+
+  };
+
   return (
     <CssVarsProvider disableTransitionOnChange>
       <CssBaseline />
@@ -38,6 +77,7 @@ export default function SignInPage() {
           },
         }}
       />
+      <Header categories={[]} />
       <Box
         sx={(theme) => ({
           width: { xs: "100%", md: "50vw" },
@@ -93,7 +133,7 @@ export default function SignInPage() {
                 </Typography>
                 <Typography level="body-sm">
                   Sudah punya akun?{" "}
-                  <Link href="/signin" level="title-sm">
+                  <Link to="/signup">
                     Masuk!
                   </Link>
                 </Typography>
@@ -117,18 +157,16 @@ export default function SignInPage() {
               atau
             </Divider>
             <Stack sx={{ gap: 4, mt: 2 }}>
-              <form
-                onSubmit={(event: React.FormEvent<SignInFormElement>) => {
-                  event.preventDefault();
-                  const formElements = event.currentTarget.elements;
-                  const data = {
-                    email: formElements.email.value,
-                    password: formElements.password.value,
-                    persistent: formElements.persistent.checked,
-                  };
-                  alert(JSON.stringify(data, null, 2));
-                }}
-              >
+              {error && (
+                <Typography color="danger" fontSize="sm">
+                  {error}
+                </Typography>
+              )}
+              <form onSubmit={handleSignUp}>
+                <FormControl required>
+                  <FormLabel>Name</FormLabel>
+                  <Input type="text" name="name" />
+                </FormControl>
                 <FormControl required>
                   <FormLabel>Email</FormLabel>
                   <Input type="email" name="email" />
@@ -146,12 +184,17 @@ export default function SignInPage() {
                     }}
                   >
                     <Checkbox size="sm" label="Ingat saya" name="persistent" />
-                    <Link level="title-sm" href="#replace-with-a-link">
+                    <Link to="/forgot-password">
                       Lupa password?
                     </Link>
                   </Box>
-                  <Button type="submit" fullWidth>
-                    Masuk
+                  <Button
+                    type="submit"
+                    fullWidth
+                    loading={loading}
+                    disabled={loading}
+                  >
+                    Daftar
                   </Button>
                 </Stack>
               </form>
