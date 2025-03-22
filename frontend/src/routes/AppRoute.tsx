@@ -15,6 +15,7 @@ import UnauthorizedPage from "../pages/UnauthorizedPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import PlaceholderPage from "../pages/PlaceholderPage";
 import SignUpPage from "../pages/SignUpPage";
+import UserProfilePage from "../pages/UserProfilePage";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -32,7 +33,7 @@ const AppRoutes: React.FC = () => {
 
         {/* Routes yang memerlukan autentikasi */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<PlaceholderPage />} />
+          <Route path="/profile" element={<UserProfilePage />} />
           <Route path="/cart" element={<PlaceholderPage />} />
         </Route>
 
