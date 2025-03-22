@@ -18,12 +18,12 @@ import Header from "../components/Header";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { signIn, clearError } from "../redux/slices/authSlice";
+import { signUp, clearError } from "../redux/slices/authSlice";
 
 interface FormElements extends HTMLFormControlsCollection {
+  name: HTMLInputElement;
   email: HTMLInputElement;
   password: HTMLInputElement;
-  persistent: HTMLInputElement;
 }
 
 interface SignInFormElement extends HTMLFormElement {
@@ -49,27 +49,21 @@ export default function SignInPage() {
     };
   }, [isAuthenticated, navigate, dispatch]);
 
-  const handleSignIn = async (event: React.FormEvent<SignInFormElement>) => {
+  const handleSignUp = async (event: React.FormEvent<SignInFormElement>) => {
     event.preventDefault();
     const formElements = event.currentTarget.elements;
 
     const credentials = {
+      name: formElements.name.value,
       email: formElements.email.value,
       password: formElements.password.value,
     };
 
-    const isPersistent = formElements.persistent.checked;
 
     // If login is successful, the token will be handled by the authSlice
     // We just need to dispatch the signIn action
-    await dispatch(signIn(credentials));
+    await dispatch(signUp(credentials));
 
-    // Store persistence preference if needed
-    if (isPersistent) {
-      localStorage.setItem("persistentLogin", "true");
-    } else {
-      localStorage.removeItem("persistentLogin");
-    }
   };
 
   return (
@@ -135,12 +129,12 @@ export default function SignInPage() {
             <Stack sx={{ gap: 4, mb: 2 }}>
               <Stack sx={{ gap: 1 }}>
                 <Typography component="h1" level="h3">
-                  Masuk
+                  Daftar
                 </Typography>
                 <Typography level="body-sm">
-                  Tidak punya akun?{" "}
+                  Sudah punya akun?{" "}
                   <Link to="/signup">
-                    Daftar!
+                    Masuk!
                   </Link>
                 </Typography>
               </Stack>
@@ -168,7 +162,11 @@ export default function SignInPage() {
                   {error}
                 </Typography>
               )}
-              <form onSubmit={handleSignIn}>
+              <form onSubmit={handleSignUp}>
+                <FormControl required>
+                  <FormLabel>Name</FormLabel>
+                  <Input type="text" name="name" />
+                </FormControl>
                 <FormControl required>
                   <FormLabel>Email</FormLabel>
                   <Input type="email" name="email" />
@@ -196,7 +194,7 @@ export default function SignInPage() {
                     loading={loading}
                     disabled={loading}
                   >
-                    Masuk
+                    Daftar
                   </Button>
                 </Stack>
               </form>
