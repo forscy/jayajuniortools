@@ -52,4 +52,27 @@ router.delete(
   productController.deleteProduct
 );
 
+// add stock to a product
+router.put(
+  "/:id/add-stock",
+  authenticateJWT,
+  verifyInventoryManagerRole,
+  productController.addStock
+);
+
+// reduce stock from a product
+router.put(
+  "/:id/reduce-stock",
+  authenticateJWT,
+  verifyInventoryManagerRole,
+  productController.reduceStock
+);
+
+// remove stock from a product to zero
+router.put(
+  "/:id/remove-stock",
+  authenticateJWT,
+  verifyInventoryManagerRole,
+  productController.removeStock
+);
 export default router;

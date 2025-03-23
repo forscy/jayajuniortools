@@ -84,3 +84,41 @@ export const searchProducts = async (req: Request, res: Response) => {
     return sendResponse(res, 400, "error", error.message);
   }
 };
+
+// add stock to a product
+export const addStock = async (req: Request, res: Response) => {
+  const id = parseInt(req.params.id);
+  const quantity = parseInt(req.body.quantity);
+
+  try {
+    const product = await productService.addStock(id, quantity);
+    return sendResponse(res, 200, "success", "Stock added successfully", product);
+  } catch (error: any) {
+    return sendResponse(res, 400, "error", error.message);
+  }
+};
+
+// reduce stock from a product
+export const reduceStock = async (req: Request, res: Response) => {
+  const id = parseInt(req.params.id);
+  const quantity = parseInt(req.body.quantity);
+
+  try {
+    const product = await productService.reduceStock(id, quantity);
+    return sendResponse(res, 200, "success", "Stock reduced successfully", product);
+  } catch (error: any) {
+    return sendResponse(res, 400, "error", error.message);
+  }
+};
+
+// remove stock to zero from a product
+export const removeStock = async (req: Request, res: Response) => {
+  const id = parseInt(req.params.id);
+
+  try {
+    const product = await productService.removeStock(id);
+    return sendResponse(res, 200, "success", "Stock removed successfully", product);
+  } catch (error: any) {
+    return sendResponse(res, 400, "error", error.message);
+  }
+};

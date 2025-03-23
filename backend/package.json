@@ -5,6 +5,8 @@
   "scripts": {
     "test": "jest",
     "seed": "ts-node prisma/seed.ts",
+    "seed:replace": "ts-node prisma/seed.ts --replace",
+    "seed:reset": "ts-node prisma/seed.ts --reset",
     "dev": "nodemon src/index.ts",
     "build": "prisma generate && tsc",
     "start": "node dist/index.js",

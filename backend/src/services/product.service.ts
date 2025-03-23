@@ -329,3 +329,120 @@ export const searchProducts = async (
     },
   };
 };
+
+
+// add stok
+export const addStock = async (id: number, qty: number) => {
+  return prisma.$transaction(async (tx) => {
+    const product = await tx.product.findUnique({
+      where: { id },
+      include: {
+        inventory: true,
+      },
+    });
+
+    if (!product) {
+      throw new Error("Product not found");
+    }
+
+    await tx.inventory.update({
+      where: { id: product.inventoryId },
+      data: {
+        quantityInStock: {
+          increment: qty,
+        },
+      },
+    });
+
+    return tx.product.findUnique({
+      where: { id },
+      include: {
+        categories: {
+          include: {
+            Category: true,
+          },
+        },
+        images: true,
+        inventory: true,
+      },
+    });
+  });
+};
+
+// reduce stok
+export const reduceStock = async (id: number, qty: number) => {
+  return prisma.$transaction(async (tx) => {
+    const product = await tx.product.findUnique({
+      where: { id },
+      include: {
+        inventory: true,
+      },
+    });
+
+    if (!product) {
+      throw new Error("Product not found");
+    }
+
+    if (product.inventory.quantityInStock < qty) {
+      throw new Error("Not enough stock");
+    }
+
+    await tx.inventory.update({
+      where: { id: product.inventoryId },
+      data: {
+        quantityInStock: {
+          decrement: qty,
+        },
+      },
+    });
+
+    return tx.product.findUnique({
+      where: { id },
+      include: {
+        categories: {
+          include: {
+            Category: true,
+          },
+        },
+        images: true,
+        inventory: true,
+      },
+    });
+  });
+};
+
+// remove stok to zero
+export const removeStock = async (id: number) => {
+  return prisma.$transaction(async (tx) => {
+    const product = await tx.product.findUnique({
+      where: { id },
+      include: {
+        inventory: true,
+      },
+    });
+
+    if (!product) {
+      throw new Error("Product not found");
+    }
+
+    await tx.inventory.update({
+      where: { id: product.inventoryId },
+      data: {
+        quantityInStock: 0,
+      },
+    });
+
+    return tx.product.findUnique({
+      where: { id },
+      include: {
+        categories: {
+          include: {
+            Category: true,
+          },
+        },
+        images: true,
+        inventory: true,
+      },
+    });
+  });
+};

@@ -486,15 +486,15 @@ const createProducts = async () => {
 
   // Product images
   const productImages = [
-    { productId: 1, url: "https://example.com/images/bor-13mm-1.jpg" },
-    { productId: 1, url: "https://example.com/images/bor-13mm-2.jpg" },
-    { productId: 2, url: "https://example.com/images/obeng-set-12.jpg" },
-    { productId: 3, url: "https://example.com/images/gergaji-circular.jpg" },
-    { productId: 4, url: "https://example.com/images/kacamata-safety.jpg" },
-    { productId: 5, url: "https://example.com/images/kunci-pas-set.jpg" },
-    { productId: 6, url: "https://example.com/images/meteran-digital-5m.jpg" },
-    { productId: 7, url: "https://example.com/images/helm-safety-kuning.jpg" },
-    { productId: 8, url: "https://example.com/images/palu-karet-500g.jpg" },
+    { productId: 1, url: "http://localhost:3003/uploads/products/no-product-image.png" },
+    { productId: 1, url: "http://localhost:3003/uploads/products/no-product-image.png" },
+    { productId: 2, url: "http://localhost:3003/uploads/products/no-product-image.png" },
+    { productId: 3, url: "http://localhost:3003/uploads/products/no-product-image.png" },
+    { productId: 4, url: "http://localhost:3003/uploads/products/no-product-image.png" },
+    { productId: 5, url: "http://localhost:3003/uploads/products/no-product-image.png" },
+    { productId: 6, url: "http://localhost:3003/uploads/products/no-product-image.png" },
+    { productId: 7, url: "http://localhost:3003/uploads/products/no-product-image.png" },
+    { productId: 8, url: "http://localhost:3003/uploads/products/no-product-image.png" },
   ];
 
   // Create product images
