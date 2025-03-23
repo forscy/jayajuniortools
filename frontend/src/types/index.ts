@@ -1,3 +1,5 @@
+// src/types/index.ts
+
 export enum ResponseMessage {
   success = "success",
   error = "error",
@@ -57,7 +59,7 @@ export interface Product {
   updatedAt: string;
   categories?: ProductCategory[];
   images?: ProductImage[];
-  discounts?: ProductDiscount[];
+  discount?: ProductDiscount;
   reviews?: Review[];
   wishlist?: Wishlist[];
   inventoryId: number;

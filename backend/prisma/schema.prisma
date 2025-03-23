@@ -47,7 +47,7 @@ model Product {
 
   categories ProductCategory[]
   images     ProductImage[]
-  discounts  ProductDiscount[]
+  discount  ProductDiscount?
   reviews    Review[] // Relasi ke review produk
   wishlist   Wishlist[] // Relasi ke wishlist
 
@@ -90,7 +90,7 @@ model Review {
 // Tabel diskon produk
 model ProductDiscount {
   id            Int          @id @default(autoincrement())
-  productId     Int
+  productId     Int @unique
   name          String // Nama diskon (mis. "Promo Lebaran", "Diskon Akhir Tahun")
   description   String?
   discountType  DiscountType

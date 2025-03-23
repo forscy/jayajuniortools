@@ -143,7 +143,7 @@ export const getProductById = async (id: number) => {
       },
       images: true,
       inventory: true,
-      discounts: true,
+      discount: true,
       reviews: true,
     },
   });

@@ -12,6 +12,9 @@ import SignUpPage from "../pages/SignUpPage";
 import UserProfilePage from "../pages/UserProfilePage";
 import ProductsPage from "../pages/ProductsPage";
 import { CssVarsProvider } from "@mui/joy";
+import ProductDashboardPage from "../pages/dashboard/ProductDashboardPage";
+import { navigationItems } from "../components/layout/DashboardLayout";
+import CategoryDashboardPage from "../pages/dashboard/CategoryDashboardPage";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -43,6 +46,9 @@ const AppRoutes: React.FC = () => {
               />
             }
           >
+            <Route path={navigationItems.dashboard.path} element={<ProductDashboardPage />} />
+            <Route path={navigationItems.products.path} element={<ProductDashboardPage />} />
+            <Route path={navigationItems.categories.path} element={<CategoryDashboardPage />} />
             <Route
               path="/products/add"
               element={<PlaceholderPage pageTitle="Add Products Page" />}

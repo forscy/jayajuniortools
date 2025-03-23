@@ -1,19 +1,9 @@
 import React, { useState, useEffect } from "react";
-import {
-  Search,
-  Favorite,
-  FavoriteBorder,
-  ShoppingCart,
-} from "@mui/icons-material";
+import { Search } from "@mui/icons-material";
 import {
   Box,
   Typography,
   Grid,
-  Card,
-  CardContent,
-  AspectRatio,
-  Chip,
-  IconButton,
   Input,
   Select,
   Option,
@@ -22,16 +12,17 @@ import {
   Divider,
   Stack,
   CircularProgress,
+  CssBaseline,
+  CssVarsProvider,
 } from "@mui/joy";
 
-import { CardMedia } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { fetchProducts } from "../redux/slices/productSlice";
 import { Product } from "../types";
 import Header from "../components/Header";
 // Di bagian atas file, tambahkan import untuk gambar default
-import noProductImage from "../assets/images/no-product-image.png";
-
+import { ProductCard } from "../components/ProductCard";
+import Footer from "../components/Footer";
 
 // Custom Pagination Component with Joy UI
 const CustomPagination: React.FC<{
@@ -111,87 +102,87 @@ const CustomPagination: React.FC<{
 // Updated Product interface to match the Redux store and backend schema
 
 // Reusable Components
-const ProductCard: React.FC<{
-  product: Product;
-  onAddToCart: (productId: number) => void;
-  onToggleFavorite: (productId: number) => void;
-  isFavorite: boolean;
-}> = ({ product, onAddToCart, onToggleFavorite, isFavorite }) => {
-  const imageUrl =
-    product.images && product.images.length > 0
-      ? product.images[0].url
-      : noProductImage;
+// const ProductCard: React.FC<{
+//   product: Product;
+//   onAddToCart: (productId: number) => void;
+//   onToggleFavorite: (productId: number) => void;
+//   isFavorite: boolean;
+// }> = ({ product, onAddToCart, onToggleFavorite, isFavorite }) => {
+//   const imageUrl =
+//     product.images && product.images.length > 0
+//       ? product.images[0].url
+//       : noProductImage;
 
-  const inStock = product.inventory && product.inventory.quantityInStock > 0;
+//   const inStock = product.inventory && product.inventory.quantityInStock > 0;
 
-  return (
-    <Card
-      variant="outlined"
-      sx={{ height: "100%", display: "flex", flexDirection: "column" }}
-    >
-      <AspectRatio ratio="4/3">
-        <CardMedia
-          component="img"
-          image={imageUrl}
-          alt={product.name}
-          sx={{ objectFit: "cover" }}
-        />
-      </AspectRatio>
-      <CardContent
-        sx={{ flexGrow: 1, display: "flex", flexDirection: "column", gap: 1 }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-          }}
-        >
-          <Typography level="title-md">{product.name}</Typography>
-          <IconButton
-            variant="plain"
-            color={isFavorite ? "danger" : "neutral"}
-            onClick={() => onToggleFavorite(product.id)}
-          >
-            {isFavorite ? <Favorite /> : <FavoriteBorder />}
-          </IconButton>
-        </Box>
+//   return (
+//     <Card
+//       variant="outlined"
+//       sx={{ height: "100%", display: "flex", flexDirection: "column" }}
+//     >
+//       <AspectRatio ratio="4/3">
+//         <CardMedia
+//           component="img"
+//           image={imageUrl}
+//           alt={product.name}
+//           sx={{ objectFit: "cover" }}
+//         />
+//       </AspectRatio>
+//       <CardContent
+//         sx={{ flexGrow: 1, display: "flex", flexDirection: "column", gap: 1 }}
+//       >
+//         <Box
+//           sx={{
+//             display: "flex",
+//             justifyContent: "space-between",
+//             alignItems: "flex-start",
+//           }}
+//         >
+//           <Typography level="title-md">{product.name}</Typography>
+//           <IconButton
+//             variant="plain"
+//             color={isFavorite ? "danger" : "neutral"}
+//             onClick={() => onToggleFavorite(product.id)}
+//           >
+//             {isFavorite ? <Favorite /> : <FavoriteBorder />}
+//           </IconButton>
+//         </Box>
 
-        <Chip size="sm" variant="soft" color={inStock ? "success" : "danger"}>
-          {inStock ? "In Stock" : "Out of Stock"}
-        </Chip>
+//         <Chip size="sm" variant="soft" color={inStock ? "success" : "danger"}>
+//           {inStock ? "In Stock" : "Out of Stock"}
+//         </Chip>
 
-        <Typography level="body-sm" noWrap>
-          {product.description || "No description available"}
-        </Typography>
+//         <Typography level="body-sm" noWrap>
+//           {product.description || "No description available"}
+//         </Typography>
 
-        <Box
-          sx={{
-            mt: "auto",
-            pt: 2,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Typography level="title-lg" fontWeight="bold">
-            ${product.retailPrice.toFixed(2)}
-          </Typography>
-          <Button
-            size="sm"
-            variant="solid"
-            color="primary"
-            onClick={() => onAddToCart(product.id)}
-            disabled={!inStock}
-            startDecorator={<ShoppingCart />}
-          >
-            Add
-          </Button>
-        </Box>
-      </CardContent>
-    </Card>
-  );
-};
+//         <Box
+//           sx={{
+//             mt: "auto",
+//             pt: 2,
+//             display: "flex",
+//             justifyContent: "space-between",
+//             alignItems: "center",
+//           }}
+//         >
+//           <Typography level="title-lg" fontWeight="bold">
+//             ${product.retailPrice.toFixed(2)}
+//           </Typography>
+//           <Button
+//             size="sm"
+//             variant="solid"
+//             color="primary"
+//             onClick={() => onAddToCart(product.id)}
+//             disabled={!inStock}
+//             startDecorator={<ShoppingCart />}
+//           >
+//             Add
+//           </Button>
+//         </Box>
+//       </CardContent>
+//     </Card>
+//   );
+// };
 
 const FilterBar: React.FC<{
   categories: string[];
@@ -369,7 +360,7 @@ const ProductsPage: React.FC = () => {
   }
 
   return (
-    <>
+    <CssVarsProvider>
       <Header />
       <Box sx={{ p: 3, maxWidth: 1200, mx: "auto" }}>
         <Typography level="h2" sx={{ mb: 2 }}>
@@ -392,14 +383,14 @@ const ProductsPage: React.FC = () => {
           </Sheet>
         ) : (
           <>
-            <Grid container spacing={3}>
+            <Grid container spacing={2}>
               {currentProducts.map((product) => (
-                <Grid key={product.id} xs={12} sm={6} md={4} lg={3}>
+                <Grid key={product.id} xs={6} sm={4} md={3}>
                   <ProductCard
                     product={product}
-                    onAddToCart={handleAddToCart}
-                    onToggleFavorite={handleToggleFavorite}
-                    isFavorite={favorites.includes(product.id)}
+                    // onAddToCart={handleAddToCart}
+                    // onToggleFavorite={handleToggleFavorite}
+                    // isFavorite={favorites.includes(product.id)}
                   />
                 </Grid>
               ))}
@@ -417,7 +408,8 @@ const ProductsPage: React.FC = () => {
           </>
         )}
       </Box>
-    </>
+      <Footer/>
+    </CssVarsProvider>
   );
 };
 
