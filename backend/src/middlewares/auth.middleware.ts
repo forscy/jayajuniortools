@@ -2,7 +2,7 @@
 
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { prisma } from "../config/client";
+import { prisma } from "../config/client.config";
 import { Role } from "@prisma/client";
 import { sendResponse } from "../utils/responseWrapper";
 import { extractBearerToken } from "../utils/auth";
@@ -13,7 +13,7 @@ export const authenticateJWT = (
   next: NextFunction
 ) => {
   const token = extractBearerToken(req); // Mendapatkan token dari request headers
-    if (!token) {
+  if (!token) {
     sendResponse(res, 401, "error", "User not authenticated");
     return; // Jika token tidak ada, kirim respon error
   }
@@ -144,4 +144,67 @@ export const verifyBuyerRole = async (
   }
 
   next(); // Jika pengguna adalah Buyer, lanjutkan ke proses berikutnya
+};
+
+// verify owner or inventory manager can access
+export const verifyOwnerOrInventoryManagerRole = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const email = (req as any).user?.email; // Mendapatkan email dari JWT
+
+  if (!email) {
+    sendResponse(res, 401, "error", "User not authenticated");
+    return;
+  }
+
+  // Cek apakah pengguna memiliki role 'OWNER' atau 'INVENTORY_MANAGER'
+  const userRole = await prisma.user.findFirst({
+    where: {
+      email: email,
+      OR: [{ role: Role.OWNER }, { role: Role.INVENTORY_MANAGER }],
+    },
+  });
+
+  if (!userRole) {
+    sendResponse(
+      res,
+      403,
+      "error",
+      "User is not an Owner or Inventory Manager"
+    );
+    return;
+  }
+
+  next(); // Jika pengguna adalah Owner atau Inventory Manager, lanjutkan ke proses berikutnya
+};
+
+// Verify owner or shopkeeper can access
+export const verifyOwnerOrShopkeeperRole = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const email = (req as any).user?.email; // Mendapatkan email dari JWT
+
+  if (!email) {
+    sendResponse(res, 401, "error", "User not authenticated");
+    return;
+  }
+
+  // Cek apakah pengguna memiliki role 'OWNER' atau 'SHOPKEEPER'
+  const userRole = await prisma.user.findFirst({
+    where: {
+      email: email,
+      OR: [{ role: Role.OWNER }, { role: Role.SHOPKEEPER }],
+    },
+  });
+
+  if (!userRole) {
+    sendResponse(res, 403, "error", "User is not an Owner or Shopkeeper");
+    return;
+  }
+
+  next(); // Jika pengguna adalah Owner atau Shopkeeper, lanjutkan ke proses berikutnya
 };
