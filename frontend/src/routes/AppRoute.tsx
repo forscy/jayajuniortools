@@ -13,8 +13,12 @@ import UserProfilePage from "../pages/UserProfilePage";
 import ProductsPage from "../pages/ProductsPage";
 import { CssVarsProvider } from "@mui/joy";
 import ProductDashboardPage from "../pages/dashboard/ProductDashboardPage";
-import { navigationItems } from "../components/layout/DashboardLayout";
+import DashboardLayout, {
+  navigationItems,
+} from "../components/layout/DashboardLayout";
 import CategoryDashboardPage from "../pages/dashboard/CategoryDashboardPage";
+import DashboardPage from "../pages/dashboard/DashboardPage";
+import UnderMaintenancePage from "../pages/UnderMaintenancePage";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -40,23 +44,70 @@ const AppRoutes: React.FC = () => {
 
           {/* Routes yang memerlukan role spesifik */}
           <Route
+            path="/dashboard/*"
             element={
               <ProtectedRoute
                 allowedRoles={[Role.OWNER, Role.INVENTORY_MANAGER]}
-              />
-            }
-          >
-            <Route path={navigationItems.dashboard.path} element={<ProductDashboardPage />} />
-            <Route path={navigationItems.products.path} element={<ProductDashboardPage />} />
-            <Route path={navigationItems.categories.path} element={<CategoryDashboardPage />} />
-            <Route
-              path="/products/add"
-              element={<PlaceholderPage pageTitle="Add Products Page" />}
-            />
-          </Route>
+              >
+                <Routes>
+                  <Route
+                    path={navigationItems.dashboard.path}
+                    element={<DashboardPage />}
+                  />
+                  <Route
+                    path={navigationItems.products.path}
+                    element={<ProductDashboardPage />}
+                  />
+                  <Route
+                    path={navigationItems.categories.path}
+                    element={<CategoryDashboardPage />}
+                  />
+                  <Route
+                    path={navigationItems.discounts.path}
+                    element={
+                      <DashboardLayout
+                        title=""
+                        children={<UnderMaintenancePage />}
+                      />
+                    }
+                  />
+                  <Route
+                    path={navigationItems.stores.path}
+                    element={
+                      <DashboardLayout
+                        title=""
+                        children={<UnderMaintenancePage />}
+                      />
+                    }
+                  />
+                  <Route
+                    path={navigationItems.orders.path}
+                    element={
+                      <DashboardLayout
+                        title=""
+                        children={<UnderMaintenancePage />}
+                      />
+                    }
+                  />
+                  <Route
+                    path={navigationItems.users.path}
+                    element={
+                      <DashboardLayout
+                        title=""
+                        children={<UnderMaintenancePage />}
+                      />
+                    }
+                  />
 
-          {/* Redirect dari root ke dashboard jika sudah login */}
-          {/* <Route path="/" element={<Navigate to="/dashboard" />} /> */}
+                  <Route
+                    path="/products/add"
+                    element={<PlaceholderPage pageTitle="Add Products Page" />}
+                  />
+                  <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+              </ProtectedRoute>
+            }
+          />
 
           {/* 404 Not Found */}
           <Route path="*" element={<NotFoundPage />} />

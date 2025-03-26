@@ -7,9 +7,13 @@ import { RootState } from "../redux/store";
 
 interface ProtectedRouteProps {
   allowedRoles?: Role[];
+  children?: React.ReactNode;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  allowedRoles,
+  children,
+}) => {
   const { isAuthenticated, user, loading } = useAppSelector(
     (state: RootState) => state.auth
   );
@@ -37,7 +41,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
   }
 
   // Jika autentikasi berhasil dan role sesuai (jika diperlukan), tampilkan child routes
-  return <Outlet />;
+  return children ? <>{children}</> : <Outlet />;
 };
 
 export default ProtectedRoute;

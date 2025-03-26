@@ -10,9 +10,9 @@ import * as localStorageUtil from "../../utils/localStorageUtil";
 // Initial state
 const initialState: AuthState = {
   user: null,
-  isAuthenticated: true,
+  isAuthenticated: false,
   // token: null,
-  loading: false,
+  loading: true,
   error: null,
 };
 

@@ -26,49 +26,49 @@ import MenuIcon from "@mui/icons-material/Menu";
 // Navigation items configuration as an object
 export const navigationItems = {
   dashboard: {
-    path: "/dashboard",
-    label: "Dashboard",
+    path: "/home",
+    label: "Home",
     icon: <GridViewIcon />,
     order: 1,
     position: "top", // Special position marker
   },
   products: {
-    path: "/dashboard/products",
+    path: "/products",
     label: "Products",
     icon: <InventoryIcon />,
     order: 2,
     position: "top", // Special position marker
   },
   categories: {
-    path: "/dashboard/categories",
+    path: "/categories",
     label: "Categories",
     icon: <CategoryIcon />,
     order: 3,
     position: "top", // Special position marker
   },
   discounts: {
-    path: "/dashboard/discounts",
+    path: "/discounts",
     label: "Discounts",
     icon: <LocalOfferIcon />,
     order: 4,
     position: "top", // Special position marker
   },
   stores: {
-    path: "/dashboard/stores",
+    path: "/stores",
     label: "Stores",
     icon: <StoreIcon />,
     order: 5,
     position: "top", // Special position marker
   },
   orders: {
-    path: "/dashboard/orders",
+    path: "/orders",
     label: "Orders",
     icon: <ReceiptIcon />,
     order: 6,
     position: "top", // Special position marker
   },
   users: {
-    path: "/dashboard/users",
+    path: "/users",
     label: "Users",
     icon: <PeopleIcon />,
     order: 7,
@@ -107,7 +107,7 @@ function SidebarNav({
   const navigate = useNavigate();
 
   const handleNavigation = (path: string) => {
-    navigate(path);
+    navigate("/dashboard"+path);
     if (onClose) onClose();
   };
 
