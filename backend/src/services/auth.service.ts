@@ -1,9 +1,8 @@
 // src/services/auth.service.ts
 import bcrypt, { compare } from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { prisma } from "../config/client";
+import { prisma } from "../config/client.config";
 import { Role, UserStatus } from "@prisma/client";
-import { comparePassword, hashPassword } from "../utils/auth";
+import { comparePassword, generateToken, hashPassword } from "../utils/auth";
 
 export const signUpService = async (
   name: string,
@@ -26,10 +25,18 @@ export const signUpService = async (
         name,
         email,
         password: hashedPassword,
+        status: UserStatus.ACTIVE,
+        role: Role.BUYER,
       },
     });
 
-    return { userId: newUser.id, message: "User registered successfully" };
+    const token = generateToken({ ...newUser, password: undefined });
+
+    return {
+      message: "User registered successfully",
+      token,
+      user: { ...newUser, password: undefined },
+    };
   } catch (error: any) {
     throw new Error(error.message || "Error during SignUp");
   }
@@ -51,27 +58,27 @@ export const signInService = async (email: string, password: string) => {
       throw new Error("Invalid credentials");
     }
 
-    const token = jwt.sign(
-      { userId: user.id, email: user.email },
-      process.env.JWT_SECRET!,
-      { expiresIn: "1h" }
-    );
+    const token = generateToken({ ...user, password: undefined });
 
-    return { token, message: "SignIn successful" };
+    return {
+      message: "SignIn successful",
+      token: token,
+      user: { ...user, password: undefined },
+    };
   } catch (error: any) {
     throw new Error(error.message || "Error during SignIn");
   }
 };
 
 export const changePasswordService = async (
-  userId: number,
+  email: string,
   oldPassword: string,
   newPassword: string
 ) => {
   try {
-    // Temukan user berdasarkan userId
+    // Temukan user berdasarkan email
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { email: email },
     });
 
     if (!user) {
@@ -90,7 +97,7 @@ export const changePasswordService = async (
 
     // Update password di database
     await prisma.user.update({
-      where: { id: userId },
+      where: { email: email },
       data: { password: hashedNewPassword },
     });
 
@@ -136,7 +143,7 @@ export const createAccountService = async ({
 
     return {
       message: "User created successfully",
-      userId: newUser.id,
+      email: newUser.email,
       role: role,
     };
   } catch (error: any) {
@@ -144,97 +151,94 @@ export const createAccountService = async ({
   }
 };
 
-
 interface SuspendAccountData {
-  userId: number;
+  email: string;
 }
 
-export const suspendAccountService = async ({ userId }: SuspendAccountData) => {
+export const suspendAccountService = async ({ email }: SuspendAccountData) => {
   try {
-    // Cari user berdasarkan userId
+    // Cari user berdasarkan email
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { email: email },
     });
 
     if (!user) {
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
 
     // Update status menjadi SUSPENDED
     const suspendedUser = await prisma.user.update({
-      where: { id: userId },
+      where: { email: email },
       data: { status: UserStatus.SUSPENDED },
     });
 
-    return { message: 'User suspended successfully', userId: suspendedUser.id };
+    return {
+      message: "User suspended successfully",
+      email: suspendedUser.email,
+    };
   } catch (error: any) {
-    throw new Error(error.message || 'Error during account suspension');
+    throw new Error(error.message || "Error during account suspension");
   }
 };
 
-
 interface DeleteAccountData {
-  userId: number;
+  email: string;
 }
 
-export const deleteAccountService = async ({ userId }: DeleteAccountData) => {
+export const deleteAccountService = async ({ email }: DeleteAccountData) => {
   try {
-    // Cari user berdasarkan userId
+    // Cari user berdasarkan email
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { email: email },
     });
 
     if (!user) {
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
 
     await prisma.wishlist.deleteMany({
       where: {
-        userId: userId,
+        email: user.email,
       },
     });
 
     // Hapus akun pengguna
     await prisma.user.delete({
-      where: { id: userId },
+      where: { email: email },
     });
 
-    return { message: 'User deleted successfully', userId };
+    return { message: "User deleted successfully", email };
   } catch (error: any) {
-    throw new Error(error.message || 'Error during account deletion');
+    throw new Error(error.message || "Error during account deletion");
   }
 };
 
-
-
 interface EditAccountData {
-  userId: number;
+  email: string;
   name?: string;
-  email?: string;
   role?: Role;
   status?: UserStatus;
 }
 
 export const editAccountService = async ({
-  userId,
   name,
   email,
   role,
   status,
 }: EditAccountData) => {
   try {
-    // Cari user berdasarkan userId
+    // Cari user berdasarkan email
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { email: email },
     });
 
     if (!user) {
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
 
     // Perbarui data pengguna
     const updatedUser = await prisma.user.update({
-      where: { id: userId },
+      where: { email: email },
       data: {
         name: name ?? user.name,
         email: email ?? user.email,
@@ -243,8 +247,8 @@ export const editAccountService = async ({
       },
     });
 
-    return { message: 'User updated successfully', userId: updatedUser.id };
+    return { message: "User updated successfully", email: updatedUser.email };
   } catch (error: any) {
-    throw new Error(error.message || 'Error during account update');
+    throw new Error(error.message || "Error during account update");
   }
 };

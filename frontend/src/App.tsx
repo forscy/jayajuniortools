@@ -1,17 +1,19 @@
-import React from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import JoySignInSideTemplate from "./pages/SignInPage";
-import HomePage from "./pages/HomePage";
+import React, { useEffect } from "react";
+import AppRoutes from "./routes/AppRoute";
+import { useSelector } from "react-redux";
+import { RootState } from "./redux/store";
+import { useAppDispatch } from "./redux/hooks";
+import { checkAuthenticated } from "./redux/slices/authSlice";
 
 function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<JoySignInSideTemplate />} />
-      </Routes>
-    </BrowserRouter>
-  );
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(checkAuthenticated());
+  }, [dispatch, isAuthenticated]);
+  return <AppRoutes />;
 }
 
 export default App;

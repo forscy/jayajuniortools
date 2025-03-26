@@ -8,14 +8,17 @@ import Checkbox from "@mui/joy/Checkbox";
 import Divider from "@mui/joy/Divider";
 import FormControl from "@mui/joy/FormControl";
 import FormLabel from "@mui/joy/FormLabel";
-import IconButton  from "@mui/joy/IconButton";
-import Link from "@mui/joy/Link";
+// import Link from "@mui/joy/Link";
+import { Link }  from "react-router-dom";
 import Input from "@mui/joy/Input";
 import Typography from "@mui/joy/Typography";
 import Stack from "@mui/joy/Stack";
-import BadgeRoundedIcon from "@mui/icons-material/BadgeRounded";
 import GoogleIcon from "../assets/images/GoogleIcon";
-import ColorSchemeToggle from "../utils/ColorSchemeTogle";
+import Header from "../components/Header";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { signIn, clearError } from "../redux/slices/authSlice";
 
 interface FormElements extends HTMLFormControlsCollection {
   email: HTMLInputElement;
@@ -27,10 +30,48 @@ interface SignInFormElement extends HTMLFormElement {
   readonly elements: FormElements;
 }
 
-
-// const customTheme = extendTheme({ defaultColorScheme: 'dark' });
-
 export default function SignInPage() {
+  const dispatch = useAppDispatch();
+  const { loading, error, isAuthenticated } = useAppSelector(
+    (state) => state.auth
+  );
+  const navigate = useNavigate();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/");
+    }
+
+    // Clear any previous errors when component mounts
+    return () => {
+      dispatch(clearError());
+    };
+  }, [isAuthenticated, navigate, dispatch]);
+
+  const handleSignIn = async (event: React.FormEvent<SignInFormElement>) => {
+    event.preventDefault();
+    const formElements = event.currentTarget.elements;
+
+    const credentials = {
+      email: formElements.email.value,
+      password: formElements.password.value,
+    };
+
+    const isPersistent = formElements.persistent.checked;
+
+    // If login is successful, the token will be handled by the authSlice
+    // We just need to dispatch the signIn action
+    await dispatch(signIn(credentials));
+
+    // Store persistence preference if needed
+    if (isPersistent) {
+      localStorage.setItem("persistentLogin", "true");
+    } else {
+      localStorage.removeItem("persistentLogin");
+    }
+  };
+
   return (
     <CssVarsProvider disableTransitionOnChange>
       <CssBaseline />
@@ -42,6 +83,7 @@ export default function SignInPage() {
           },
         }}
       />
+      <Header categories={[]} />
       <Box
         sx={(theme) => ({
           width: { xs: "100%", md: "50vw" },
@@ -67,18 +109,6 @@ export default function SignInPage() {
             px: 2,
           }}
         >
-          <Box
-            component="header"
-            sx={{ py: 3, display: "flex", justifyContent: "space-between" }}
-          >
-            <Box sx={{ gap: 2, display: "flex", alignItems: "center" }}>
-              <IconButton variant="soft" color="primary" size="sm">
-                <BadgeRoundedIcon />
-              </IconButton>
-              <Typography level="title-lg">JAYA JUNIOR TOOLS</Typography>
-            </Box>
-            <ColorSchemeToggle />
-          </Box>
           <Box
             component="main"
             sx={{
@@ -109,7 +139,7 @@ export default function SignInPage() {
                 </Typography>
                 <Typography level="body-sm">
                   Tidak punya akun?{" "}
-                  <Link href="#replace-with-a-link" level="title-sm">
+                  <Link to="/signup">
                     Daftar!
                   </Link>
                 </Typography>
@@ -133,18 +163,12 @@ export default function SignInPage() {
               atau
             </Divider>
             <Stack sx={{ gap: 4, mt: 2 }}>
-              <form
-                onSubmit={(event: React.FormEvent<SignInFormElement>) => {
-                  event.preventDefault();
-                  const formElements = event.currentTarget.elements;
-                  const data = {
-                    email: formElements.email.value,
-                    password: formElements.password.value,
-                    persistent: formElements.persistent.checked,
-                  };
-                  alert(JSON.stringify(data, null, 2));
-                }}
-              >
+              {error && (
+                <Typography color="danger" fontSize="sm">
+                  {error}
+                </Typography>
+              )}
+              <form onSubmit={handleSignIn}>
                 <FormControl required>
                   <FormLabel>Email</FormLabel>
                   <Input type="email" name="email" />
@@ -162,11 +186,16 @@ export default function SignInPage() {
                     }}
                   >
                     <Checkbox size="sm" label="Ingat saya" name="persistent" />
-                    <Link level="title-sm" href="#replace-with-a-link">
+                    <Link to="/forgot-password">
                       Lupa password?
                     </Link>
                   </Box>
-                  <Button type="submit" fullWidth>
+                  <Button
+                    type="submit"
+                    fullWidth
+                    loading={loading}
+                    disabled={loading}
+                  >
                     Masuk
                   </Button>
                 </Stack>

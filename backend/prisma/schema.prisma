@@ -3,23 +3,22 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id        Int     @id @default(autoincrement())
+  id        Int        @id @default(autoincrement())
   name      String
-  email     String  @unique
+  email     String     @unique
   password  String
   status    UserStatus @default(ACTIVE)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  orders    Order[]
-  reviews   Review[]
-  role      Role @default(BUYER)
-  wishlist  Wishlist[]
-  notifications NotificationRecipient[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  role      Role       @default(BUYER)
+
+  wishlist Wishlist[]
+  reviews  Review[] // Relasi ke review yang dibuat user
 }
 
 enum UserStatus {
@@ -28,8 +27,6 @@ enum UserStatus {
   SUSPENDED
 }
 
-
-
 enum Role {
   OWNER
   INVENTORY_MANAGER
@@ -37,6 +34,158 @@ enum Role {
   SHOPKEEPER
 }
 
+model Product {
+  id              Int      @id @default(autoincrement())
+  name            String   @unique
+  description     String?
+  retailPrice     Float // Harga eceran
+  wholesalePrice  Float? // Harga grosir
+  minWholesaleQty Int? // Minimum pembelian untuk harga grosir
+  sku             String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  categories ProductCategory[]
+  images     ProductImage[]
+  discount  ProductDiscount?
+  reviews    Review[] // Relasi ke review produk
+  wishlist   Wishlist[] // Relasi ke wishlist
+
+  inventoryId Int       @unique
+  inventory   Inventory @relation(fields: [inventoryId], references: [id])
+
+  brandId   Int?
+  brand     Brand? @relation(fields: [brandId], references: [id])
+}
+
+// Merk
+// Merk (Brand)
+model Brand {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+  logoUrl     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  products    Product[] // One brand can have many products
+}
+
+// Model Review untuk ulasan produk
+model Review {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  userId    Int // UserId user yang membuat review
+  rating    Int // Rating (biasanya 1-5)
+  comment   String? // Komentar review (opsional)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([userId, productId]) // Setiap user hanya bisa review produk sekali
+}
+
+// Tabel diskon produk
+model ProductDiscount {
+  id            Int          @id @default(autoincrement())
+  productId     Int @unique
+  name          String // Nama diskon (mis. "Promo Lebaran", "Diskon Akhir Tahun")
+  description   String?
+  discountType  DiscountType
+  discountValue Float // Nilai diskon (persentase atau nominal tetap)
+  minPurchase   Int? // Minimum pembelian untuk mendapatkan diskon (opsional)
+  startDate     DateTime
+  endDate       DateTime
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  product Product @relation(fields: [productId], references: [id])
+}
+
+// Inventory Table
+model Inventory {
+  id              Int      @id @default(autoincrement())
+  locationName    String   @default("Main Warehouse")
+  quantityInStock Int      @default(0)
+  minimumStock    Int      @default(5)
+  lastUpdated     DateTime @updatedAt
+
+  product           Product?
+  InventorySupplier InventorySupplier[]
+}
+
+// Supplier Table
+model Supplier {
+  id        Int      @id @default(autoincrement())
+  name      String
+  contact   String
+  email     String
+  address   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  InventorySupplier InventorySupplier[]
+}
+
+// Inventory-Supplier Table
+model InventorySupplier {
+  id          Int       @id @default(autoincrement())
+  inventoryId Int
+  supplierId  Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now())
+  Inventory   Inventory @relation(fields: [inventoryId], references: [id])
+  Supplier    Supplier  @relation(fields: [supplierId], references: [id])
+
+  @@unique([inventoryId, supplierId])
+}
+
+enum DiscountType {
+  PERCENTAGE // Diskon persentase (mis. 10%)
+  FIXED // Diskon nominal tetap (mis. Rp 10.000)
+  BUY_X_GET_Y // Beli X gratis Y (implementasi detail bisa di aplikasi)
+}
+
+model Wishlist {
+  id        Int      @id @default(autoincrement())
+  email     String
+  productId Int
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [email], references: [email])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([email, productId]) // Mencegah produk duplikat dalam wishlist pengguna yang sama
+}
+
+model ProductImage {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  url       String
+  Product   Product @relation(fields: [productId], references: [id])
+}
+
+model Category {
+  id       Int               @id @default(autoincrement())
+  name     String            @unique
+  description String?
+  products ProductCategory[]
+}
+
+model ProductCategory {
+  id         Int      @id @default(autoincrement())
+  productId  Int
+  categoryId Int
+  Product    Product  @relation(fields: [productId], references: [id])
+  Category   Category @relation(fields: [categoryId], references: [id])
+}
+
+
+
+// Store
 model Store {
   id          Int    @id @default(autoincrement())
   name        String @unique
@@ -47,7 +196,6 @@ model Store {
   logo        String?
   banner      String?
   operationalHours OperationalHour[]
-  returnPolicy ReturnPolicy[]
 }
 
 model OperationalHour {
@@ -67,190 +215,4 @@ enum Day {
   FRIDAY
   SATURDAY
   SUNDAY
-}
-
-model Product {
-  id         Int      @id @default(autoincrement())
-  name       String
-  description String?
-  price      Float
-  stock      Int
-  sku        String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  categories ProductCategory[]
-  images     ProductImage[]
-  reviews    Review[]
-  stockHistory StockHistory[]
-  units      ProductUnit[]
-  priceHistory PriceHistory[]
-  wishlist  Wishlist[]
-  orderItems OrderItem[]
-  discount   Discount[]
-}
-
-model PriceHistory {
-  id        Int      @id @default(autoincrement())
-  productId Int
-  oldPrice  Float
-  newPrice  Float
-  changedAt DateTime @default(now())
-  Product   Product  @relation(fields: [productId], references: [id])
-}
-
-model Wishlist {
-  id        Int  @id @default(autoincrement())
-  userId    Int
-  productId Int
-  createdAt DateTime @default(now())
-  User      User    @relation(fields: [userId], references: [id])
-  Product   Product @relation(fields: [productId], references: [id])
-}
-
-model ProductImage {
-  id         Int    @id @default(autoincrement())
-  productId  Int
-  url        String
-  Product    Product @relation(fields: [productId], references: [id])
-}
-
-model Category {
-  id    Int    @id @default(autoincrement())
-  name  String @unique
-  products ProductCategory[]
-}
-
-model ProductCategory {
-  id        Int  @id @default(autoincrement())
-  productId Int
-  categoryId Int
-  Product   Product @relation(fields: [productId], references: [id])
-  Category  Category @relation(fields: [categoryId], references: [id])
-}
-
-model StockHistory {
-  id         Int      @id @default(autoincrement())
-  productId  Int
-  quantity   Int
-  changeType StockChangeType
-  createdAt  DateTime @default(now())
-  Product    Product  @relation(fields: [productId], references: [id])
-}
-
-enum StockChangeType {
-  ADDITION
-  REMOVAL
-}
-
-model ProductUnit {
-  id        Int    @id @default(autoincrement())
-  productId Int
-  unit      String
-  price     Float
-  Product   Product @relation(fields: [productId], references: [id])
-}
-
-model Order {
-  id         Int      @id @default(autoincrement())
-  userId     Int
-  status     OrderStatus @default(PENDING)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  items      OrderItem[]
-  transaction Transaction[]
-  User       User    @relation(fields: [userId], references: [id])
-}
-
-enum OrderStatus {
-  PENDING
-  PROCESSED
-  SHIPPED
-  COMPLETED
-  CANCELLED
-}
-
-model OrderItem {
-  id         Int     @id @default(autoincrement())
-  orderId    Int
-  productId  Int
-  quantity   Int
-  price      Float
-  Order      Order   @relation(fields: [orderId], references: [id])
-  Product    Product @relation(fields: [productId], references: [id])
-}
-
-model Review {
-  id         Int     @id @default(autoincrement())
-  userId     Int
-  productId  Int
-  rating     Int
-  comment    String?
-  createdAt  DateTime @default(now())
-  User       User    @relation(fields: [userId], references: [id])
-  Product    Product @relation(fields: [productId], references: [id])
-}
-
-model Discount {
-  id         Int      @id @default(autoincrement())
-  productId  Int
-  type       DiscountType
-  value      Float
-  startDate  DateTime
-  endDate    DateTime
-  Product    Product @relation(fields: [productId], references: [id])
-}
-
-enum DiscountType {
-  PERCENTAGE
-  FIXED
-}
-
-model Transaction {
-  id         Int      @id @default(autoincrement())
-  orderId    Int
-  totalAmount Float
-  status     TransactionStatus @default(PENDING)
-  createdAt  DateTime @default(now())
-  Order      Order    @relation(fields: [orderId], references: [id])
-  payment    Payment[]
-}
-
-enum TransactionStatus {
-  PENDING
-  SUCCESS
-  FAILED
-}
-
-model Payment {
-  id              Int    @id @default(autoincrement())
-  transactionId   Int
-  paymentGateway  String
-  paymentReference String
-  status          TransactionStatus
-  createdAt       DateTime @default(now())
-  Transaction     Transaction @relation(fields: [transactionId], references: [id])
-}
-
-model ReturnPolicy {
-  id         Int      @id @default(autoincrement())
-  storeId    Int
-  policyText String
-  returnDays Int
-  Store      Store  @relation(fields: [storeId], references: [id])
-}
-
-model Notification {
-  id         Int      @id @default(autoincrement())
-  message    String
-  isRead     Boolean @default(false)
-  createdAt  DateTime @default(now())
-  recipients NotificationRecipient[]
-}
-
-model NotificationRecipient {
-  id             Int  @id @default(autoincrement())
-  notificationId Int
-  userId         Int
-  Notification   Notification @relation(fields: [notificationId], references: [id])
-  User           User @relation(fields: [userId], references: [id])
 }
