@@ -6,13 +6,13 @@ import { useAppDispatch } from "./redux/hooks";
 import { checkAuthenticated } from "./redux/slices/authSlice";
 
 function App() {
-  const { loading } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
 
   const dispatch = useAppDispatch();
 
   useEffect(() => {
     dispatch(checkAuthenticated());
-  }, [dispatch]);
+  }, [dispatch, isAuthenticated]);
   return <AppRoutes />;
 }
 

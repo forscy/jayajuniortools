@@ -12,7 +12,7 @@ const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
   // token: null,
-  loading: false,
+  loading: true,
   error: null,
 };
 

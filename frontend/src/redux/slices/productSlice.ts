@@ -1,8 +1,7 @@
 // src/redux/slices/productSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { ProductState, Product } from "../../types";
-import axios from "axios";
-import { HEADERS_WITH_CREDENTIALS } from "../../types/constants";
+import productController from "../../controllers/ProductController";
 
 // Initial state
 const initialState: ProductState = {
@@ -14,9 +13,17 @@ const initialState: ProductState = {
 // Async thunk for fetching products
 export const fetchProducts = createAsyncThunk(
   "product/fetchProducts",
-  async (_, { rejectWithValue }) => {
+  async (params: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    category?: number;
+    minPrice?: number;
+    maxPrice?: number;
+    sort?: string;
+  } = {}, { rejectWithValue }) => {
     try {
-      const response = await axios.get("/api/products");
+      const response = await productController.getProducts(params);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
@@ -34,7 +41,7 @@ export const addProduct = createAsyncThunk(
     { getState, rejectWithValue }
   ) => {
     try {
-      const response = await axios.post("/api/products", productData, HEADERS_WITH_CREDENTIALS);
+      const response = await productController.createProduct(productData);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(
@@ -49,7 +56,7 @@ export const deleteProduct = createAsyncThunk(
   "product/deleteProduct",
   async (productId: number, { getState, rejectWithValue }) => {
     try {
-      await axios.delete(`/api/products/${productId}`, HEADERS_WITH_CREDENTIALS);
+      await productController.deleteProduct(productId);
       return productId;
     } catch (error: any) {
       return rejectWithValue(

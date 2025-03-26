@@ -18,6 +18,7 @@ import {
   Chip,
   Badge,
   Divider,
+  CircularProgress,
 } from "@mui/joy";
 import {
   Person,
@@ -29,6 +30,8 @@ import {
   Settings,
   Logout,
   ArrowForward,
+  DeleteOutline,
+  ShoppingCart,
 } from "@mui/icons-material";
 import { useTheme } from "@mui/joy/styles";
 import { useMediaQuery } from "@mui/material";
@@ -36,10 +39,11 @@ import {
   User,
   Order,
   Review,
-  WishlistItem,
+  Wishlist,
   UserStatus,
   OrderStatus,
   Role,
+  Product,
 } from "../types";
 
 // Utility functions
@@ -58,6 +62,8 @@ const getStatusColor = (status: string) => {
   > = {
     [UserStatus.ACTIVE]: "success",
     [UserStatus.INACTIVE]: "neutral",
+    [UserStatus.SUSPENDED]: "danger",
+    [OrderStatus.PENDING]: "neutral",
     [OrderStatus.PROCESSED]: "primary",
     [OrderStatus.SHIPPED]: "warning",
     [OrderStatus.COMPLETED]: "success",
@@ -310,7 +316,7 @@ const ReviewsPanel = ({ reviews, formatDate }: any) => {
                     }}
                   >
                     <Typography level="title-md">
-                      {review.productName}
+                      {review.product?.name}
                     </Typography>
                     <Typography level="body-xs">
                       {formatDate(review.createdAt)}
@@ -336,53 +342,73 @@ const ReviewsPanel = ({ reviews, formatDate }: any) => {
   );
 };
 
-// Component for wishlist tab
-const WishlistPanel = ({ wishlist }: any) => (
+// New component for wishlist tab
+const WishlistPanel = ({ wishlist }: { wishlist: Wishlist[] }) => (
   <>
     <Typography level="h4" sx={{ mb: 2 }}>
       My Wishlist
     </Typography>
     {wishlist.length > 0 ? (
       <Grid container spacing={2}>
-        {wishlist.map((item: WishlistItem) => (
-          <Grid xs={12} sm={6} md={4} key={item.id}>
+        {wishlist.map((item: Wishlist) => (
+          <Grid xs={12} sm={6} lg={4} key={item.id}>
             <Card variant="outlined" sx={{ height: "100%" }}>
-              <AspectRatio ratio="1" sx={{ maxWidth: "100%" }}>
-                <img
-                  src={
-                    item.productImage ||
-                    `https://source.unsplash.com/random/300x300/?tool&id=${item.productId}`
-                  }
-                  alt={item.productName}
-                  style={{ objectFit: "cover" }}
-                />
-              </AspectRatio>
-              <Divider />
+              <Box sx={{ position: "relative" }}>
+                <AspectRatio ratio="1">
+                  <img
+                    src={
+                      item.product?.images?.[0]?.url ||
+                      "https://via.placeholder.com/200"
+                    }
+                    alt={item.product?.name}
+                    style={{ objectFit: "cover" }}
+                  />
+                </AspectRatio>
+                <IconButton
+                  size="sm"
+                  variant="soft"
+                  color="danger"
+                  sx={{ position: "absolute", top: 8, right: 8 }}
+                >
+                  <DeleteOutline />
+                </IconButton>
+              </Box>
               <CardContent>
-                <Typography level="title-md">{item.productName}</Typography>
-                <Typography level="body-lg" sx={{ fontWeight: "bold", mb: 2 }}>
-                  Rp {item.price.toLocaleString("id-ID")}
+                <Typography level="title-sm" noWrap>
+                  {item.product?.name}
                 </Typography>
-                <Box sx={{ display: "flex", gap: 1 }}>
-                  <Button size="sm" color="primary" sx={{ flexGrow: 1 }}>
-                    Add to Cart
-                  </Button>
-                  <IconButton
-                    variant="soft"
-                    color="danger"
-                    aria-label="Delete from wishlist"
-                  >
-                    <Favorite />
-                  </IconButton>
-                </Box>
+                <Typography level="body-sm" sx={{ mt: 0.5, mb: 1.5 }}>
+                  Rp {item.product?.retailPrice.toLocaleString("id-ID")}
+                </Typography>
+                <Button
+                  size="sm"
+                  variant="solid"
+                  color="primary"
+                  fullWidth
+                  startDecorator={<ShoppingCart />}
+                >
+                  Add to Cart
+                </Button>
               </CardContent>
             </Card>
           </Grid>
         ))}
       </Grid>
     ) : (
-      <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          py: 4,
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 2,
+        }}
+      >
         <Typography level="body-lg">Your wishlist is empty</Typography>
+        <Button startDecorator={<ShoppingBag />} variant="soft" color="primary">
+          Browse Products
+        </Button>
       </Box>
     )}
   </>
@@ -393,8 +419,9 @@ const UserProfilePage: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
+  const [wishlist, setWishlist] = useState<Wishlist[]>([]);
   const [notifications, setNotifications] = useState<number>(3);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -402,12 +429,15 @@ const UserProfilePage: React.FC = () => {
   // Mock data - this would be replaced with actual API calls
   useEffect(() => {
     // Simulate API calls
+    setLoading(true);
     setTimeout(() => {
       setUser({
+        id: 1,
         name: "John Doe",
         email: "john.doe@example.com",
         status: UserStatus.ACTIVE,
         createdAt: "2023-01-15T00:00:00Z",
+        updatedAt: "2023-01-15T00:00:00Z",
         role: Role.BUYER,
       });
 
@@ -416,66 +446,122 @@ const UserProfilePage: React.FC = () => {
           id: 1,
           status: OrderStatus.PROCESSED,
           createdAt: "2023-05-10T00:00:00Z",
-          totalAmount: 150.99,
+          totalAmount: 150000,
         },
         {
           id: 2,
           status: OrderStatus.SHIPPED,
           createdAt: "2023-06-15T00:00:00Z",
-          totalAmount: 89.5,
+          totalAmount: 89500,
         },
         {
           id: 3,
           status: OrderStatus.COMPLETED,
           createdAt: "2023-07-20T00:00:00Z",
-          totalAmount: 210.75,
+          totalAmount: 210750,
         },
       ]);
+
+      // Mock product data
+      const mockProducts: Product[] = [
+        {
+          id: 101,
+          name: "Power Drill",
+          description: "High-power professional drill",
+          retailPrice: 450000,
+          wholesalePrice: 400000,
+          minWholesaleQty: 5,
+          sku: "DRILL-001",
+          createdAt: "2023-01-01T00:00:00Z",
+          updatedAt: "2023-01-01T00:00:00Z",
+          inventoryId: 1,
+          images: [{ id: 1, productId: 101, url: "/images/power-drill.jpg" }],
+        },
+        {
+          id: 102,
+          name: "Wrench Set",
+          description: "Professional wrench set with various sizes",
+          retailPrice: 350000,
+          sku: "WRNCH-001",
+          createdAt: "2023-01-02T00:00:00Z",
+          updatedAt: "2023-01-02T00:00:00Z",
+          inventoryId: 2,
+          images: [{ id: 2, productId: 102, url: "/images/wrench-set.jpg" }],
+        },
+        {
+          id: 103,
+          name: "Premium Hammer",
+          description: "Durable premium hammer",
+          retailPrice: 125000,
+          sku: "HMMR-001",
+          createdAt: "2023-01-03T00:00:00Z",
+          updatedAt: "2023-01-03T00:00:00Z",
+          inventoryId: 3,
+          images: [{ id: 3, productId: 103, url: "/images/hammer.jpg" }],
+        },
+      ];
 
       setReviews([
         {
           id: 1,
           productId: 101,
-          productName: "Power Drill",
+          userId: 1,
           rating: 5,
           comment: "Great power tool, very durable",
           createdAt: "2023-03-15T00:00:00Z",
+          updatedAt: "2023-03-15T00:00:00Z",
+          product: mockProducts[0],
         },
         {
           id: 2,
           productId: 102,
-          productName: "Wrench Set",
+          userId: 1,
           rating: 4,
           comment: "Good quality for the price",
           createdAt: "2023-04-22T00:00:00Z",
+          updatedAt: "2023-04-22T00:00:00Z",
+          product: mockProducts[1],
         },
       ]);
 
       setWishlist([
         {
           id: 1,
+          email: "john.doe@example.com",
           productId: 103,
-          productName: "Premium Hammer",
-          productImage: "/images/hammer.jpg",
-          price: 29.99,
+          createdAt: "2023-06-15T00:00:00Z",
+          product: mockProducts[2],
         },
         {
           id: 2,
-          productId: 104,
-          productName: "Toolbox",
-          productImage: "/images/toolbox.jpg",
-          price: 79.99,
-        },
-        {
-          id: 3,
-          productId: 105,
-          productName: "Cordless Screwdriver",
-          productImage: "/images/screwdriver.jpg",
-          price: 45.5,
+          email: "john.doe@example.com",
+          productId: 101,
+          createdAt: "2023-07-10T00:00:00Z",
+          product: mockProducts[0],
         },
       ]);
-    }, 500);
+
+      setLoading(false);
+    }, 800);
   }, []);
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "80vh",
+          flexDirection: "column",
+          gap: 2,
+        }}
+      >
+        <CircularProgress />
+        <Typography level="body-lg">Loading profile...</Typography>
+      </Box>
+    );
+  }
 
   if (!user) {
     return (
@@ -487,7 +573,7 @@ const UserProfilePage: React.FC = () => {
           height: "80vh",
         }}
       >
-        <Typography level="h4">Loading profile...</Typography>
+        <Typography level="h4">Profile not found</Typography>
       </Box>
     );
   }

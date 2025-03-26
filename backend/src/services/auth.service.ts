@@ -1,6 +1,6 @@
 // src/services/auth.service.ts
 import bcrypt, { compare } from "bcryptjs";
-import { prisma } from "../config/client";
+import { prisma } from "../config/client.config";
 import { Role, UserStatus } from "@prisma/client";
 import { comparePassword, generateToken, hashPassword } from "../utils/auth";
 
@@ -198,7 +198,7 @@ export const deleteAccountService = async ({ email }: DeleteAccountData) => {
 
     await prisma.wishlist.deleteMany({
       where: {
-        userId: user.id,
+        email: user.email,
       },
     });
 

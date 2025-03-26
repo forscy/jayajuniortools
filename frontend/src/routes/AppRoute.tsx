@@ -3,12 +3,6 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Role } from "../types/index";
 import SignInPage from "../pages/SignInPage";
-// import Register from '../components/Register';
-// import Dashboard from '../components/Dashboard';
-// import ProductList from '../components/ProductList';
-// import AddProduct from '../components/AddProduct';
-// import NotFound from '../components/NotFound';
-// import Unauthorized from '../components/Unauthorized';
 import ProtectedRoute from "./ProtectedRoute";
 import HomePage from "../pages/HomePage";
 import UnauthorizedPage from "../pages/UnauthorizedPage";
@@ -16,48 +10,110 @@ import NotFoundPage from "../pages/NotFoundPage";
 import PlaceholderPage from "../pages/PlaceholderPage";
 import SignUpPage from "../pages/SignUpPage";
 import UserProfilePage from "../pages/UserProfilePage";
+import ProductsPage from "../pages/ProductsPage";
+import { CssVarsProvider } from "@mui/joy";
+import ProductDashboardPage from "../pages/dashboard/ProductDashboardPage";
+import DashboardLayout, {
+  navigationItems,
+} from "../components/layout/DashboardLayout";
+import CategoryDashboardPage from "../pages/dashboard/CategoryDashboardPage";
+import DashboardPage from "../pages/dashboard/DashboardPage";
+import UnderMaintenancePage from "../pages/UnderMaintenancePage";
 
 const AppRoutes: React.FC = () => {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Routes publik */}
-        <Route path="/" element={<HomePage />} />
-        <Route
-          path="/cart"
-          element={<PlaceholderPage pageTitle="Cart Page" />}
-        />
-        <Route path="/signin" element={<SignInPage />} />
-        <Route path="/signup" element={<SignUpPage />} />
-        <Route path="/unauthorized" element={<UnauthorizedPage />} />
-
-        {/* Routes yang memerlukan autentikasi */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/profile" element={<UserProfilePage />} />
-          <Route path="/cart" element={<PlaceholderPage />} />
-        </Route>
-
-        {/* Routes yang memerlukan role spesifik */}
-        <Route
-          element={
-            <ProtectedRoute
-              allowedRoles={[Role.OWNER, Role.INVENTORY_MANAGER]}
-            />
-          }
-        >
+    <CssVarsProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Routes publik */}
+          <Route path="/" element={<HomePage />} />
           <Route
-            path="/products/add"
-            element={<PlaceholderPage pageTitle="Add Products Page" />}
+            path="/cart"
+            element={<PlaceholderPage pageTitle="Cart Page" />}
           />
-        </Route>
+          <Route path="/signin" element={<SignInPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/unauthorized" element={<UnauthorizedPage />} />
+          <Route path="/products" element={<ProductsPage />} />
 
-        {/* Redirect dari root ke dashboard jika sudah login */}
-        {/* <Route path="/" element={<Navigate to="/dashboard" />} /> */}
+          {/* Routes yang memerlukan autentikasi */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/profile" element={<UserProfilePage />} />
+            <Route path="/cart" element={<PlaceholderPage />} />
+          </Route>
 
-        {/* 404 Not Found */}
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Routes yang memerlukan role spesifik */}
+          <Route
+            path="/dashboard/*"
+            element={
+              <ProtectedRoute
+                allowedRoles={[Role.OWNER, Role.INVENTORY_MANAGER]}
+              >
+                <Routes>
+                  <Route
+                    path={navigationItems.dashboard.path}
+                    element={<DashboardPage />}
+                  />
+                  <Route
+                    path={navigationItems.products.path}
+                    element={<ProductDashboardPage />}
+                  />
+                  <Route
+                    path={navigationItems.categories.path}
+                    element={<CategoryDashboardPage />}
+                  />
+                  <Route
+                    path={navigationItems.discounts.path}
+                    element={
+                      <DashboardLayout
+                        title=""
+                        children={<UnderMaintenancePage />}
+                      />
+                    }
+                  />
+                  <Route
+                    path={navigationItems.stores.path}
+                    element={
+                      <DashboardLayout
+                        title=""
+                        children={<UnderMaintenancePage />}
+                      />
+                    }
+                  />
+                  <Route
+                    path={navigationItems.orders.path}
+                    element={
+                      <DashboardLayout
+                        title=""
+                        children={<UnderMaintenancePage />}
+                      />
+                    }
+                  />
+                  <Route
+                    path={navigationItems.users.path}
+                    element={
+                      <DashboardLayout
+                        title=""
+                        children={<UnderMaintenancePage />}
+                      />
+                    }
+                  />
+
+                  <Route
+                    path="/products/add"
+                    element={<PlaceholderPage pageTitle="Add Products Page" />}
+                  />
+                  <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* 404 Not Found */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </BrowserRouter>
+    </CssVarsProvider>
   );
 };
 

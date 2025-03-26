@@ -1,6 +1,6 @@
 // src/services/store.service.ts
 
-import { prisma } from "../config/client";
+import { prisma } from "../config/client.config";
 
 // read store information
 export const getStoreService = async () => {
