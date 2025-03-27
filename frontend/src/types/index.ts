@@ -1,5 +1,7 @@
 // src/types/index.ts
 
+import { ProductDTO } from "../dto/ProductDTO";
+
 export enum ResponseMessage {
   success = "success",
   error = "error",
@@ -21,7 +23,7 @@ export enum Role {
 export enum DiscountType {
   PERCENTAGE = "PERCENTAGE",
   FIXED = "FIXED",
-  BUY_X_GET_Y = "BUY_X_GET_Y"
+  BUY_X_GET_Y = "BUY_X_GET_Y",
 }
 
 export enum Day {
@@ -31,7 +33,7 @@ export enum Day {
   THURSDAY = "THURSDAY",
   FRIDAY = "FRIDAY",
   SATURDAY = "SATURDAY",
-  SUNDAY = "SUNDAY"
+  SUNDAY = "SUNDAY",
 }
 
 export interface User {
@@ -197,7 +199,8 @@ export interface AuthState {
 }
 
 export interface ProductState {
-  products: Product[];
+  product: ProductDTO | null;
+  products: ProductDTO[];
   loading: boolean;
   error: string | null;
 }
@@ -215,4 +218,19 @@ export interface Order {
   status: OrderStatus;
   createdAt: string;
   totalAmount?: number;
+}
+
+export interface Discount {
+  id: number;
+  productId: number;
+  name: string;
+  description: string;
+  discountType: DiscountType;
+  discountValue: number;
+  minPurchase: number;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }

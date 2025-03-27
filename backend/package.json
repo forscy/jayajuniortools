@@ -4,6 +4,7 @@
   "main": "index.ts",
   "scripts": {
     "test": "jest",
+    "test:db": "ts-node prisma/test-db.ts",
     "seed": "ts-node prisma/seed.ts",
     "seed:replace": "ts-node prisma/seed.ts --replace",
     "seed:reset": "ts-node prisma/seed.ts --reset",

@@ -1,448 +1,295 @@
+import {
+  Category,
+  ProductCategory,
+  ProductImage,
+  Review,
+} from "@prisma/client";
 import { prisma } from "../config/client.config";
-
-export interface CreateProductInput {
-  name: string;
-  description?: string;
-  retailPrice: number;
-  wholesalePrice?: number;
-  minWholesaleQty?: number;
-  sku?: string;
-  categories?: number[];
-  images?: string[];
-  quantityInStock: number;
-  minimumStock?: number;
-}
-
-export interface UpdateProductInput {
-  name?: string;
-  description?: string;
-  retailPrice?: number;
-  wholesalePrice?: number;
-  minWholesaleQty?: number;
-  sku?: string;
-  categories?: number[];
-  images?: string[];
-  quantityInStock?: number;
-  minimumStock?: number;
-}
-
-export interface ProductSearchParams {
-  name?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  categoryId?: number;
-  inStock?: boolean;
-}
+import { ProductDTO } from "../dto/ProductDTO";
+import { Pagination } from "../utils/responseWrapper";
 
 // Create a new product
-export const createProduct = async (data: CreateProductInput) => {
+export const createProduct = async (productData: ProductDTO) => {
   const {
-    categories = [],
-    images = [],
+    name,
+    description,
+    retailPrice,
+    wholesalePrice,
+    minWholesaleQty,
+    sku,
+
+    // inventory
     quantityInStock,
-    minimumStock = 5,
-    ...productData
-  } = data;
+    minimumStock,
+    locationName,
 
-  return prisma.$transaction(async (tx) => {
-    // Create inventory first
-    const inventory = await tx.inventory.create({
-      data: {
-        quantityInStock,
-        minimumStock,
-      },
-    });
+    // relation
+    categories,
+    imageUrls,
+    discount,
+    brand,
+  } = productData;
 
-    // Create the product
-    const product = await tx.product.create({
-      data: {
-        ...productData,
-        inventoryId: inventory.id,
-      },
-    });
-
-    // Add categories
-    if (categories.length > 0) {
-      await tx.productCategory.createMany({
-        data: categories.map((categoryId) => ({
-          productId: product.id,
-          categoryId,
-        })),
-      });
-    }
-
-    // Add images
-    if (images.length > 0) {
-      await tx.productImage.createMany({
-        data: images.map((url) => ({
-          productId: product.id,
-          url,
-        })),
-      });
-    }
-
-    return tx.product.findUnique({
-      where: { id: product.id },
-      include: {
-        categories: {
-          include: {
-            Category: true,
-          },
+  try {
+    const product = await prisma.$transaction(async (tx) => {
+      const productExist = await tx.product.findFirst({
+        where: {
+          name,
         },
-        images: true,
-        inventory: true,
-      },
+      });
+
+      if (productExist) {
+        throw new Error("Product already exist");
+      }
+
+      var categoriesData: Category[] = [];
+      // Add categories
+      if (categories && categories.length > 0) {
+        categoriesData = await tx.category.findMany({
+          where: {
+            name: {
+              in: categories,
+            },
+          },
+        });
+      }
+
+      // Add Product
+      const product = await tx.product.create({
+        data: {
+          name,
+          description,
+          retailPrice,
+          wholesalePrice,
+          minWholesaleQty,
+          sku,
+          quantityInStock,
+          minimumStock,
+          locationName,
+          categories: {
+            create: categoriesData.map((category) => ({
+              category: {
+                connect: {
+                  id: category.id,
+                },
+              },
+            })),
+          },
+          discount: discount
+            ? {
+                connectOrCreate: {
+                  where: {
+                    name: discount.name, // Menghubungkan berdasarkan nama discount
+                  },
+                  create: {
+                    name: discount.name,
+                    description: discount.description,
+                    discountType: discount.discountType,
+                    discountValue: discount.discountValue,
+                    minPurchase: discount.minPurchase,
+                    startDate: discount.startDate,
+                    endDate: discount.endDate,
+                    isActive: discount.isActive,
+                  },
+                },
+              }
+            : undefined,
+          brand: brand
+            ? {
+                connectOrCreate: {
+                  where: {
+                    name: brand.name, // Menghubungkan berdasarkan nama brand
+                  },
+                  create: {
+                    name: brand.name,
+                    description: brand.description,
+                    logoUrl: brand.logoUrl,
+                  },
+                },
+              }
+            : undefined,
+        },
+      });
+
+      if (imageUrls && imageUrls.length > 0) {
+        // Add multiple product images
+        await tx.productImage.createMany({
+          data: imageUrls.map((url) => ({
+            productId: product.id,
+            url,
+          })),
+        });
+      }
+      
+
+      return tx.product.findUnique({
+        where: { id: product.id },
+        include: {
+          categories: {
+            include: {
+              category: true,
+            },
+          },
+          imageUrls: true,
+          discount: true,
+          brand: true,
+        },
+      });
     });
-  });
+
+    if (product) {
+      const newProduct: ProductDTO = {
+        id: product.id,
+        name: product.name,
+        description: product.description!,
+        retailPrice: product.retailPrice!,
+        wholesalePrice: product.wholesalePrice!,
+        minWholesaleQty: product.minWholesaleQty!,
+        sku: product.sku!,
+        quantityInStock: product.quantityInStock!,
+        minimumStock: product.minimumStock!,
+        locationName: product.locationName!,
+        categories: product.categories.map((c) => c.category.name)!,
+        imageUrls: product.imageUrls.map((i) => i.url)!,
+        discount: {
+          name: product.discount?.name!,
+          description: product.discount?.description!,
+          discountType: product.discount?.discountType!,
+          discountValue: product.discount?.discountValue!,
+          minPurchase: product.discount?.minPurchase!,
+          startDate: product.discount?.startDate!,
+          endDate: product.discount?.endDate!,
+          isActive: product.discount?.isActive!,
+        },
+        brand: {
+          name: product.brand?.name!,
+          description: product.brand?.description!,
+          logoUrl: product.brand?.logoUrl!,
+        },
+      };
+      return newProduct;
+    }
+    return null;
+  } catch (error: any) {
+    console.error(error);
+    throw new Error(error.message || "Failed to create product");
+  }
 };
 
 // Get all products with pagination
 export const getProducts = async (page = 1, limit = 10) => {
-  const skip = (page - 1) * limit;
+  try {
+    const skip = (page - 1) * limit;
 
-  const [products, total] = await Promise.all([
-    prisma.product.findMany({
-      skip,
-      take: limit,
-      include: {
-        categories: {
-          include: {
-            Category: true,
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        skip,
+        take: limit,
+        include: {
+          categories: {
+            include: {
+              category: true,
+            },
           },
+          imageUrls: true,
         },
-        images: true,
-        inventory: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    }),
-    prisma.product.count(),
-  ]);
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
+      prisma.product.count(),
+    ]);
 
-  return {
-    products,
-    pagination: {
+    const pagination: Pagination = {
       total,
       page,
       limit,
       pages: Math.ceil(total / limit),
-    },
-  };
+    };
+
+    // Convert product data to DTO
+    const productsDTO = products.map((product) => {
+      const newProduct: ProductDTO = {
+        id: product.id,
+        name: product.name,
+        description: product.description!,
+        retailPrice: product.retailPrice!,
+        wholesalePrice: product.wholesalePrice!,
+        minWholesaleQty: product.minWholesaleQty!,
+        sku: product.sku!,
+        quantityInStock: product.quantityInStock!,
+        minimumStock: product.minimumStock!,
+        locationName: product.locationName!,
+        categories: product.categories.map((c) => c.category.name)!,
+        imageUrls: product.imageUrls.map((i) => i.url)!,
+      };
+
+      return newProduct;
+    });
+
+    return {
+      products: productsDTO,
+      pagination: pagination,
+    };
+  } catch (error: any) {
+    throw new Error(error.message || "Failed to retrieve products");
+  }
 };
 
 // Get a product by ID
 export const getProductById = async (id: number) => {
-  return prisma.product.findUnique({
-    where: { id },
-    include: {
-      categories: {
-        include: {
-          Category: true,
-        },
-      },
-      images: true,
-      inventory: true,
-      discount: true,
-      reviews: true,
-    },
-  });
-};
-
-// Update a product
-export const updateProduct = async (id: number, data: UpdateProductInput) => {
-  const { categories, images, quantityInStock, minimumStock, ...updateData } =
-    data;
-
-  return prisma.$transaction(async (tx) => {
-    const product = await tx.product.findUnique({
-      where: { id },
-      include: {
-        categories: true,
-        images: true,
-        inventory: true,
-      },
-    });
-
-    if (!product) {
-      throw new Error("Product not found");
-    }
-
-    // Update inventory if stock info is provided
-    if (quantityInStock !== undefined || minimumStock !== undefined) {
-      await tx.inventory.update({
-        where: { id: product.inventoryId },
-        data: {
-          ...(quantityInStock !== undefined ? { quantityInStock } : {}),
-          ...(minimumStock !== undefined ? { minimumStock } : {}),
-        },
-      });
-    }
-
-    // Update the product
-    const updatedProduct = await tx.product.update({
-      where: { id },
-      data: updateData,
-    });
-
-    // Update categories if provided
-    if (categories) {
-      // Delete existing categories
-      await tx.productCategory.deleteMany({
-        where: { productId: id },
-      });
-
-      // Add new categories
-      await tx.productCategory.createMany({
-        data: categories.map((categoryId) => ({
-          productId: id,
-          categoryId,
-        })),
-      });
-    }
-
-    // Update images if provided
-    if (images) {
-      // Delete existing images
-      await tx.productImage.deleteMany({
-        where: { productId: id },
-      });
-
-      // Add new images
-      await tx.productImage.createMany({
-        data: images.map((url) => ({
-          productId: id,
-          url,
-        })),
-      });
-    }
-
-    return tx.product.findUnique({
+  try {
+    const product = await prisma.product.findUnique({
       where: { id },
       include: {
         categories: {
           include: {
-            Category: true,
+            category: true,
           },
         },
-        images: true,
-        inventory: true,
+        imageUrls: true,
+        discount: true,
+        brand: true,
+        reviews: true,
       },
     });
-  });
-};
 
-// Delete a product
-export const deleteProduct = async (id: number) => {
-  return prisma.$transaction(async (tx) => {
-    // Get product to get inventory ID
-    const product = await tx.product.findUnique({
-      where: { id },
-      select: { inventoryId: true },
-    });
+    if (product) {
+      const newProduct: ProductDTO = {
+        id: product.id,
+        name: product.name,
+        description: product.description!,
+        retailPrice: product.retailPrice!,
+        wholesalePrice: product.wholesalePrice!,
+        minWholesaleQty: product.minWholesaleQty!,
+        sku: product.sku!,
+        quantityInStock: product.quantityInStock!,
+        minimumStock: product.minimumStock!,
+        locationName: product.locationName!,
+        categories: product.categories.map((c) => c.category.name)!,
+        imageUrls: product.imageUrls.map((i) => i.url)!,
+        discount: {
+          name: product.discount?.name!,
+          description: product.discount?.description!,
+          discountType: product.discount?.discountType!,
+          discountValue: product.discount?.discountValue!,
+          minPurchase: product.discount?.minPurchase!,
+          startDate: product.discount?.startDate!,
+          endDate: product.discount?.endDate!,
+          isActive: product.discount?.isActive!,
+        },
+        brand: {
+          name: product.brand?.name!,
+          description: product.brand?.description!,
+          logoUrl: product.brand?.logoUrl!,
+        },
+      };
 
-    if (!product) throw new Error("Product not found");
+      return newProduct;
+    }
 
-    // Delete product
-    await tx.product.delete({ where: { id } });
-
-    // Delete inventory
-    await tx.inventory.delete({ where: { id: product.inventoryId } });
-
-    return { id };
-  });
-};
-
-// Search products
-export const searchProducts = async (
-  params: ProductSearchParams,
-  page = 1,
-  limit = 10
-) => {
-  const { name, minPrice, maxPrice, categoryId, inStock } = params;
-  const skip = (page - 1) * limit;
-
-  const whereClause: any = {};
-
-  if (name) {
-    whereClause.name = {
-      contains: name,
-    };
+    return null;
+  } catch (error: any) {
+    throw new Error(error.message || "Failed to retrieve product");
   }
-
-  if (minPrice !== undefined || maxPrice !== undefined) {
-    whereClause.retailPrice = {};
-    if (minPrice !== undefined) {
-      whereClause.retailPrice.gte = minPrice;
-    }
-    if (maxPrice !== undefined) {
-      whereClause.retailPrice.lte = maxPrice;
-    }
-  }
-
-  if (categoryId) {
-    whereClause.categories = {
-      some: {
-        categoryId,
-      },
-    };
-  }
-
-  if (inStock) {
-    whereClause.inventory = {
-      quantityInStock: {
-        gt: 0,
-      },
-    };
-  }
-
-  const [products, total] = await Promise.all([
-    prisma.product.findMany({
-      where: whereClause,
-      skip,
-      take: limit,
-      include: {
-        categories: {
-          include: {
-            Category: true,
-          },
-        },
-        images: true,
-        inventory: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    }),
-    prisma.product.count({
-      where: whereClause,
-    }),
-  ]);
-
-  return {
-    products,
-    pagination: {
-      total,
-      page,
-      limit,
-      pages: Math.ceil(total / limit),
-    },
-  };
-};
-
-
-// add stok
-export const addStock = async (id: number, qty: number) => {
-  return prisma.$transaction(async (tx) => {
-    const product = await tx.product.findUnique({
-      where: { id },
-      include: {
-        inventory: true,
-      },
-    });
-
-    if (!product) {
-      throw new Error("Product not found");
-    }
-
-    await tx.inventory.update({
-      where: { id: product.inventoryId },
-      data: {
-        quantityInStock: {
-          increment: qty,
-        },
-      },
-    });
-
-    return tx.product.findUnique({
-      where: { id },
-      include: {
-        categories: {
-          include: {
-            Category: true,
-          },
-        },
-        images: true,
-        inventory: true,
-      },
-    });
-  });
-};
-
-// reduce stok
-export const reduceStock = async (id: number, qty: number) => {
-  return prisma.$transaction(async (tx) => {
-    const product = await tx.product.findUnique({
-      where: { id },
-      include: {
-        inventory: true,
-      },
-    });
-
-    if (!product) {
-      throw new Error("Product not found");
-    }
-
-    if (product.inventory.quantityInStock < qty) {
-      throw new Error("Not enough stock");
-    }
-
-    await tx.inventory.update({
-      where: { id: product.inventoryId },
-      data: {
-        quantityInStock: {
-          decrement: qty,
-        },
-      },
-    });
-
-    return tx.product.findUnique({
-      where: { id },
-      include: {
-        categories: {
-          include: {
-            Category: true,
-          },
-        },
-        images: true,
-        inventory: true,
-      },
-    });
-  });
-};
-
-// remove stok to zero
-export const removeStock = async (id: number) => {
-  return prisma.$transaction(async (tx) => {
-    const product = await tx.product.findUnique({
-      where: { id },
-      include: {
-        inventory: true,
-      },
-    });
-
-    if (!product) {
-      throw new Error("Product not found");
-    }
-
-    await tx.inventory.update({
-      where: { id: product.inventoryId },
-      data: {
-        quantityInStock: 0,
-      },
-    });
-
-    return tx.product.findUnique({
-      where: { id },
-      include: {
-        categories: {
-          include: {
-            Category: true,
-          },
-        },
-        images: true,
-        inventory: true,
-      },
-    });
-  });
 };
