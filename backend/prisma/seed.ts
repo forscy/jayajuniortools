@@ -276,71 +276,8 @@ const createBrands = async () => {
 
 // Create products with inventories
 const createProducts = async () => {
-  // First create inventories
-  const inventories = [
-    {
-      id: 1,
-      locationName: "Main Warehouse",
-      quantityInStock: 25,
-      minimumStock: 5,
-    },
-    {
-      id: 2,
-      locationName: "Main Warehouse",
-      quantityInStock: 15,
-      minimumStock: 3,
-    },
-    {
-      id: 3,
-      locationName: "Main Warehouse",
-      quantityInStock: 50,
-      minimumStock: 10,
-    },
-    {
-      id: 4,
-      locationName: "Main Warehouse",
-      quantityInStock: 30,
-      minimumStock: 5,
-    },
-    {
-      id: 5,
-      locationName: "Main Warehouse",
-      quantityInStock: 100,
-      minimumStock: 20,
-    },
-    {
-      id: 6,
-      locationName: "Main Warehouse",
-      quantityInStock: 40,
-      minimumStock: 8,
-    },
-    {
-      id: 7,
-      locationName: "Main Warehouse",
-      quantityInStock: 35,
-      minimumStock: 7,
-    },
-    {
-      id: 8,
-      locationName: "Main Warehouse",
-      quantityInStock: 20,
-      minimumStock: 5,
-    },
-  ];
 
-  // Create inventories
-  for (const inventory of inventories) {
-    const existingInventory = await prisma.inventory.findUnique({
-      where: { id: inventory.id },
-    });
-
-    if (!existingInventory) {
-      await prisma.inventory.create({
-        data: inventory,
-      });
-    }
-  }
-
+    // Product categories relationship
   // Products data
   const products = [
     {
@@ -352,8 +289,10 @@ const createProducts = async () => {
       wholesalePrice: 380000,
       minWholesaleQty: 3,
       sku: "BOR-PRO-13MM",
-      inventoryId: 1,
       brandId: 1,
+      locationName: "Main Warehouse",
+      quantityInStock: 25,
+      minimumStock: 5,
     },
     {
       id: 2,
@@ -364,8 +303,10 @@ const createProducts = async () => {
       wholesalePrice: 105000,
       minWholesaleQty: 5,
       sku: "OBG-SET-12",
-      inventoryId: 2,
       brandId: 2,
+      locationName: "Main Warehouse",
+      quantityInStock: 15,
+      minimumStock: 3,
     },
     {
       id: 3,
@@ -376,8 +317,10 @@ const createProducts = async () => {
       wholesalePrice: 750000,
       minWholesaleQty: 2,
       sku: "GRG-CIR-7",
-      inventoryId: 3,
       brandId: 1,
+      locationName: "Main Warehouse",
+      quantityInStock: 50,
+      minimumStock: 10,
     },
     {
       id: 4,
@@ -388,8 +331,9 @@ const createProducts = async () => {
       wholesalePrice: 35000,
       minWholesaleQty: 10,
       sku: "KCM-SFT-CLR",
-      inventoryId: 4,
-      brandId: 4,
+      locationName: "Main Warehouse",
+      quantityInStock: 30,
+      minimumStock: 5,
     },
     {
       id: 5,
@@ -399,8 +343,9 @@ const createProducts = async () => {
       wholesalePrice: 235000,
       minWholesaleQty: 3,
       sku: "KNC-PAS-SET",
-      inventoryId: 5,
-      brandId: 3,
+      locationName: "Main Warehouse",
+      quantityInStock: 100,
+      minimumStock: 20,
     },
     {
       id: 6,
@@ -411,8 +356,9 @@ const createProducts = async () => {
       wholesalePrice: 160000,
       minWholesaleQty: 5,
       sku: "MTR-DIG-5M",
-      inventoryId: 6,
-      brandId: 5,
+      locationName: "Main Warehouse",
+      quantityInStock: 40,
+      minimumStock: 8,
     },
     {
       id: 7,
@@ -423,8 +369,9 @@ const createProducts = async () => {
       wholesalePrice: 70000,
       minWholesaleQty: 10,
       sku: "HLM-SFT-KNG",
-      inventoryId: 7,
-      brandId: 4,
+      locationName: "Main Warehouse",
+      quantityInStock: 35,
+      minimumStock: 7,
     },
     {
       id: 8,
@@ -435,8 +382,9 @@ const createProducts = async () => {
       wholesalePrice: 38000,
       minWholesaleQty: 5,
       sku: "PLU-KRT-500",
-      inventoryId: 8,
-      brandId: 2,
+      locationName: "Main Warehouse",
+      quantityInStock: 20,
+      minimumStock: 5,
     },
   ];
 
@@ -452,20 +400,20 @@ const createProducts = async () => {
       });
     }
   }
+  
 
-  // Product categories relationship
   const productCategories = [
-    { productId: 1, categoryId: 1 }, // Mesin Bor -> Mesin Perkakas
-    { productId: 1, categoryId: 3 }, // Mesin Bor -> Peralatan Listrik
-    { productId: 2, categoryId: 2 }, // Set Obeng -> Perkakas Tangan
-    { productId: 3, categoryId: 1 }, // Gergaji Listrik -> Mesin Perkakas
-    { productId: 3, categoryId: 3 }, // Gergaji Listrik -> Peralatan Listrik
-    { productId: 4, categoryId: 5 }, // Kacamata Safety -> Perlengkapan Keselamatan
-    { productId: 5, categoryId: 2 }, // Set Kunci Pas -> Perkakas Tangan
-    { productId: 6, categoryId: 4 }, // Meteran Digital -> Alat Ukur
-    { productId: 6, categoryId: 3 }, // Meteran Digital -> Peralatan Listrik
-    { productId: 7, categoryId: 5 }, // Helm Safety -> Perlengkapan Keselamatan
-    { productId: 8, categoryId: 2 }, // Palu Karet -> Perkakas Tangan
+    { productId: 1, categoryName: "Mesin Perkakas" }, // Mesin Bor -> Mesin Perkakas
+    { productId: 1, categoryName: "Mesin Perkakas" }, // Mesin Bor -> Peralatan Listrik
+    { productId: 2, categoryName: "Mesin Perkakas" }, // Set Obeng -> Perkakas Tangan
+    { productId: 3, categoryName: "Mesin Perkakas" }, // Gergaji Listrik -> Mesin Perkakas
+    { productId: 3, categoryName: "Perkakas Tangan" }, // Gergaji Listrik -> Peralatan Listrik
+    { productId: 4, categoryName: "Perkakas Tangan" }, // Kacamata Safety -> Perlengkapan Keselamatan
+    { productId: 5, categoryName: "Perkakas Tangan" }, // Set Kunci Pas -> Perkakas Tangan
+    { productId: 6, categoryName: "Perkakas Tangan" }, // Meteran Digital -> Alat Ukur
+    { productId: 6, categoryName: "Peralatan Listrik" }, // Meteran Digital -> Peralatan Listrik
+    { productId: 7, categoryName: "Peralatan Listrik" }, // Helm Safety -> Perlengkapan Keselamatan
+    { productId: 8, categoryName: "Peralatan Listrik" }, // Palu Karet -> Perkakas Tangan
   ];
 
   // Create product categories relationship
@@ -473,7 +421,7 @@ const createProducts = async () => {
     const existing = await prisma.productCategory.findFirst({
       where: {
         productId: pc.productId,
-        categoryId: pc.categoryId,
+        categoryName: pc.categoryName
       },
     });
 
@@ -518,9 +466,8 @@ const createProducts = async () => {
   const threeMonthsLater = new Date(now);
   threeMonthsLater.setMonth(now.getMonth() + 3);
 
-  const productDiscounts = [
+  const discounts = [
     {
-      productId: 1,
       name: "Promo Mesin Bor",
       description: "Diskon special untuk mesin bor",
       discountType: DiscountType.PERCENTAGE,
@@ -530,7 +477,6 @@ const createProducts = async () => {
       isActive: true,
     },
     {
-      productId: 3,
       name: "Special Discount Gergaji",
       description: "Potongan harga khusus untuk gergaji listrik",
       discountType: DiscountType.FIXED,
@@ -540,7 +486,6 @@ const createProducts = async () => {
       isActive: true,
     },
     {
-      productId: 5,
       name: "Promo Set Kunci",
       description: "Diskon untuk pembelian set kunci pas",
       discountType: DiscountType.PERCENTAGE,
@@ -552,16 +497,15 @@ const createProducts = async () => {
   ];
 
   // Create product discounts
-  for (const discount of productDiscounts) {
-    const existing = await prisma.productDiscount.findFirst({
+  for (const discount of discounts) {
+    const existing = await prisma.discount.findFirst({
       where: {
-        productId: discount.productId,
         name: discount.name,
       },
     });
 
     if (!existing) {
-      await prisma.productDiscount.create({
+      await prisma.discount.create({
         data: discount,
       });
     }
@@ -571,32 +515,32 @@ const createProducts = async () => {
 };
 
 // Create some wishlist entries
-const createWishlists = async () => {
-  const wishlists = [
-    { email: "buyer1@gmail.com", productId: 1 },
-    { email: "buyer1@gmail.com", productId: 3 },
-    { email: "buyer2@gmail.com", productId: 2 },
-    { email: "buyer3@gmail.com", productId: 5 },
-    { email: "buyer4@gmail.com", productId: 7 },
-  ];
+// const createWishlists = async () => {
+//   const wishlists = [
+//     { email: "buyer1@gmail.com", productId: 1 },
+//     { email: "buyer1@gmail.com", productId: 3 },
+//     { email: "buyer2@gmail.com", productId: 2 },
+//     { email: "buyer3@gmail.com", productId: 5 },
+//     { email: "buyer4@gmail.com", productId: 7 },
+//   ];
 
-  for (const wishlist of wishlists) {
-    const existing = await prisma.wishlist.findFirst({
-      where: {
-        email: wishlist.email,
-        productId: wishlist.productId,
-      },
-    });
+//   for (const wishlist of wishlists) {
+//     const existing = await prisma.wishlist.findFirst({
+//       where: {
+//         email: wishlist.email,
+//         productId: wishlist.productId,
+//       },
+//     });
 
-    if (!existing) {
-      await prisma.wishlist.create({
-        data: wishlist,
-      });
-    }
-  }
+//     if (!existing) {
+//       await prisma.wishlist.create({
+//         data: wishlist,
+//       });
+//     }
+//   }
 
-  console.log("Seeder untuk wishlist berhasil dijalankan!");
-};
+//   console.log("Seeder untuk wishlist berhasil dijalankan!");
+// };
 
 // Create some reviews
 const createReviews = async () => {
@@ -604,35 +548,35 @@ const createReviews = async () => {
     {
       id: 1,
       productId: 1,
-      userId: 1,
+      email: "buyer1@gmail.com",
       rating: 5,
       comment: "Mesin bor yang sangat bagus dan kuat. Sangat merekomendasikan!",
     },
     {
       id: 2,
       productId: 1,
-      userId: 2,
+      email: "buyer1@gmail.com",
       rating: 4,
       comment: "Kualitas bagus, tapi agak berat untuk penggunaan lama.",
     },
     {
       id: 3,
       productId: 2,
-      userId: 2,
+      email: "buyer1@gmail.com",
       rating: 5,
       comment: "Set obeng yang sangat lengkap dan kualitasnya bagus.",
     },
     {
       id: 4,
       productId: 3,
-      userId: 3,
+      email: "buyer2@gmail.com",
       rating: 4,
       comment: "Gergaji yang bagus, potongannya rapi dan presisi.",
     },
     {
       id: 5,
       productId: 5,
-      userId: 3,
+      email: "buyer3@gmail.com",
       rating: 5,
       comment:
         "Set kunci pas yang lengkap, material kokoh dan nyaman digenggam.",
@@ -642,7 +586,7 @@ const createReviews = async () => {
   for (const review of reviews) {
     const existing = await prisma.review.findFirst({
       where: {
-        id: review.id,
+        email: review.email,
         productId: review.productId,
       },
     });
@@ -663,7 +607,7 @@ const runSeeder = async () => {
     await createCategories();
     await createBrands();
     await createProducts();
-    await createWishlists();
+    // await createWishlists();
     await createReviews();
     console.log("Semua seeder berhasil dijalankan!");
   } catch (e) {

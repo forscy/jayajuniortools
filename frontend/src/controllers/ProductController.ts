@@ -1,6 +1,7 @@
 import { BASE_API_URL } from "../types/constants";
 import { BaseController } from "./BaseController";
 import { Product, ProductImage, Category } from "../types";
+import { ProductDTO } from "../dto/ProductDTO";
 
 // src/controllers/ProductController.ts
 
@@ -19,17 +20,17 @@ class ProductController extends BaseController {
     maxPrice?: number;
     sort?: string;
   }) {
-    return this.setAuthHeader().get<Product[]>("", params);
+    return this.setAuthHeader().get<ProductDTO[]>("", params);
   }
 
   // Get a specific product by ID
   public async getProductById(id: number) {
-    return this.setAuthHeader().get<Product>(`/${id}`);
+    return this.setAuthHeader().get<ProductDTO>(`/${id}`);
   }
 
   // Create a new product (requires admin/inventory manager role)
-  public async createProduct(productData: Omit<Product, "id" | "createdAt" | "updatedAt">) {
-    return this.setAuthHeader().post<Product>("", productData);
+  public async createProduct(productData: ProductDTO) {
+    return this.setAuthHeader().post<ProductDTO>("", productData);
   }
 
   // Update a product (requires admin/inventory manager role)
@@ -39,7 +40,7 @@ class ProductController extends BaseController {
 
   // Delete a product (requires admin/inventory manager role)
   public async deleteProduct(id: number) {
-    return this.setAuthHeader().delete<Product>(`/${id}`);
+    return this.setAuthHeader().delete<ProductDTO>(`/${id}`);
   }
 
   // Get product categories

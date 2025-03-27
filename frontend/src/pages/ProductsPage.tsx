@@ -12,17 +12,16 @@ import {
   Divider,
   Stack,
   CircularProgress,
-  CssBaseline,
   CssVarsProvider,
 } from "@mui/joy";
 
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { fetchProducts } from "../redux/slices/productSlice";
-import { Product } from "../types";
 import Header from "../components/Header";
 // Di bagian atas file, tambahkan import untuk gambar default
 import { ProductCard } from "../components/ProductCard";
 import Footer from "../components/Footer";
+import { ProductDTO } from "../dto/ProductDTO";
 
 // Custom Pagination Component with Joy UI
 const CustomPagination: React.FC<{
@@ -254,8 +253,8 @@ const ProductsPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const { products, loading, error } = useAppSelector((state) => state.product);
 
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [favorites, setFavorites] = useState<number[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<ProductDTO[]>([]);
+  // const [favorites, setFavorites] = useState<number[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [page, setPage] = useState<number>(1);
@@ -278,9 +277,7 @@ const ProductsPage: React.FC = () => {
 
     if (selectedCategory !== "all") {
       result = result.filter((product) =>
-        product.categories?.some(
-          (cat) => cat.category?.name === selectedCategory
-        )
+        product.categories?.some((cat) => cat === selectedCategory)
       );
     }
 
@@ -303,10 +300,7 @@ const ProductsPage: React.FC = () => {
     ? Array.from(
         new Set(
           products.flatMap(
-            (product) =>
-              product.categories
-                ?.map((cat) => cat.category?.name)
-                .filter((name): name is string => name !== undefined) || []
+            (product) => product.categories?.filter(Boolean) || []
           )
         )
       )
@@ -320,18 +314,18 @@ const ProductsPage: React.FC = () => {
 
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
 
-  const handleAddToCart = (productId: number) => {
-    // Implement cart functionality
-    console.log(`Added product ${productId} to cart`);
-  };
+  // const handleAddToCart = (productId: number) => {
+  //   // Implement cart functionality
+  //   console.log(`Added product ${productId} to cart`);
+  // };
 
-  const handleToggleFavorite = (productId: number) => {
-    setFavorites((prev) =>
-      prev.includes(productId)
-        ? prev.filter((id) => id !== productId)
-        : [...prev, productId]
-    );
-  };
+  // const handleToggleFavorite = (productId: number) => {
+  //   setFavorites((prev) =>
+  //     prev.includes(productId)
+  //       ? prev.filter((id) => id !== productId)
+  //       : [...prev, productId]
+  //   );
+  // };
 
   if (loading) {
     return (
@@ -408,7 +402,7 @@ const ProductsPage: React.FC = () => {
           </>
         )}
       </Box>
-      <Footer/>
+      <Footer />
     </CssVarsProvider>
   );
 };
