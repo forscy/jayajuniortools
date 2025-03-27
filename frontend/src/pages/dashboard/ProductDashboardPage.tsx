@@ -17,24 +17,33 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
+import VisibilityIcon from '@mui/icons-material/Visibility';
+
 
 // Components and Types
 import DashboardLayout from "../../components/layout/DashboardLayout";
-import { Product } from "../../types";
-import { mockProducts } from "../../mock/mockData";
+import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
+import { fetchProducts } from "../../redux/slices/productSlice";
+import { useAppDispatch } from "../../redux/hooks";
+import { ProductDTO } from "../../dto/ProductDTO";
 
-
-function ProductsTable({ products }: { products: Product[] }) {
+function ProductsTable({ products }: { products: ProductDTO[] }) {
   const navigate = useNavigate();
-  
+  const currentPath = window.location.pathname;
+
   const handleEdit = (productId: number) => {
-    navigate(`/products/edit/${productId}`);
+    navigate(currentPath + `/edit/${productId}`);
   };
-  
+
   const handleDelete = (productId: number) => {
     console.log("Delete product:", productId);
     // Implement delete functionality here
   };
+
+  const handleDetail = (productId: number) => {
+    navigate(`/products/${productId}`);
+  }
 
   return (
     <Box
@@ -97,10 +106,10 @@ function ProductsTable({ products }: { products: Product[] }) {
               <td>{product.sku}</td>
               <td>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Typography>{product.inventory?.quantityInStock}</Typography>
-                  {product.inventory &&
-                    product.inventory.quantityInStock <=
-                      product.inventory.minimumStock && (
+                  <Typography>{product?.quantityInStock}</Typography>
+                  {product &&
+                    product.quantityInStock <=
+                      product.minimumStock! && (
                       <Chip size="sm" variant="soft" color="danger">
                         Low
                       </Chip>
@@ -111,22 +120,32 @@ function ProductsTable({ products }: { products: Product[] }) {
               <td>${product.wholesalePrice?.toFixed(2)}</td>
               <td>
                 <Box sx={{ display: "flex", gap: 1 }}>
-                  <Tooltip title="Edit">
-                    <IconButton 
-                      size="sm" 
-                      variant="soft" 
+                  <Tooltip title="Detail">
+                    <IconButton
+                      size="sm"
+                      variant="soft"
                       color="neutral"
-                      onClick={() => handleEdit(product.id)}
+                      onClick={() => handleDetail(product.id!)}
+                    >
+                      <VisibilityIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Edit">
+                    <IconButton
+                      size="sm"
+                      variant="soft"
+                      color="neutral"
+                      onClick={() => handleEdit(product.id!)}
                     >
                       <EditIcon />
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Delete">
-                    <IconButton 
-                      size="sm" 
-                      variant="soft" 
+                    <IconButton
+                      size="sm"
+                      variant="soft"
                       color="danger"
-                      onClick={() => handleDelete(product.id)}
+                      onClick={() => handleDelete(product.id!)}
                     >
                       <DeleteIcon />
                     </IconButton>
@@ -142,20 +161,29 @@ function ProductsTable({ products }: { products: Product[] }) {
 }
 
 export default function ProductsDashboard() {
-  const [searchQuery, setSearchQuery] = React.useState("");
-  const [isLoading, setIsLoading] = React.useState(false);
-  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const currentPath = window.location.pathname;
 
-  const filteredProducts = mockProducts.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.brand?.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const { loading, products } = useSelector(
+    (state: RootState) => state.product
   );
+
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const navigate = useNavigate();
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
   };
+
+  // Fetch products
+  React.useEffect(() => {
+    dispatch(
+      fetchProducts({
+        page: 1,
+        pageSize: 10,
+      })
+    );
+  }, [dispatch]);
 
   return (
     <DashboardLayout title="Product Management">
@@ -178,7 +206,7 @@ export default function ProductsDashboard() {
         />
         <Button
           startDecorator={<AddIcon />}
-          onClick={() => navigate("/products/add")}
+          onClick={() => navigate(currentPath + "/add")}
           sx={{ width: { xs: "100%", sm: "auto" } }}
         >
           Add Product
@@ -195,18 +223,18 @@ export default function ProductsDashboard() {
           },
         }}
       >
-        {isLoading ? (
+        {loading ? (
           <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
             <CircularProgress />
           </Box>
         ) : (
-          <ProductsTable products={filteredProducts} />
+          <ProductsTable products={products} />
         )}
       </Sheet>
 
       <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
         <Typography level="body-sm">
-          Showing {filteredProducts.length} of {mockProducts.length} products
+          Showing {products.length} of {products.length} products
         </Typography>
       </Box>
     </DashboardLayout>

@@ -19,6 +19,8 @@ import DashboardLayout, {
 import CategoryDashboardPage from "../pages/dashboard/CategoryDashboardPage";
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import UnderMaintenancePage from "../pages/UnderMaintenancePage";
+import DetailProductPage from "../pages/DetailProductPage";
+import AddProductPage from "../pages/dashboard/AddProductPage";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -35,6 +37,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
           <Route path="/products" element={<ProductsPage />} />
+          <Route path="/products/:id" element={<DetailProductPage />} />
 
           {/* Routes yang memerlukan autentikasi */}
           <Route element={<ProtectedRoute />}>
@@ -50,6 +53,7 @@ const AppRoutes: React.FC = () => {
                 allowedRoles={[Role.OWNER, Role.INVENTORY_MANAGER]}
               >
                 <Routes>
+                  <Route index element={<DashboardPage />} />
                   <Route
                     path={navigationItems.dashboard.path}
                     element={<DashboardPage />}
@@ -101,7 +105,12 @@ const AppRoutes: React.FC = () => {
 
                   <Route
                     path="/products/add"
-                    element={<PlaceholderPage pageTitle="Add Products Page" />}
+                    element={
+                      <DashboardLayout
+                        title="Add Products Page"
+                        children={<AddProductPage />}
+                      />
+                    }
                   />
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>

@@ -20,12 +20,15 @@ import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 import { logoutUser } from "../redux/slices/authSlice";
 import ColorSchemeToggle from "./ColorSchemeTogle";
 import { useAppDispatch } from "../redux/hooks";
+import { Role } from "../types";
 
 interface Category {
   id: number;
@@ -49,6 +52,11 @@ export default function Header({ categories }: HeaderProps) {
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  // Navigate to dashboard if user is owner or inventory manager
+  const handleDashboardClick = () => {
+    navigate("/dashboard/home");
   };
 
   // Simulasi loading untuk kategori yang dipilih
@@ -206,6 +214,14 @@ export default function Header({ categories }: HeaderProps) {
                   <MenuItem disabled>
                     <Typography level="body-sm">{user.email}</Typography>
                   </MenuItem>
+                  {/* If Role == Owner or Inventory Manager Show Dashboard Button */}
+                  {(user.role === Role.OWNER ||
+                    user.role === Role.INVENTORY_MANAGER) && (
+                    <MenuItem onClick={handleDashboardClick}>
+                      <DashboardIcon sx={{ mr: 1 }} fontSize="small" />
+                      Dashboard
+                    </MenuItem>
+                  )}
                   <Divider />
                   <MenuItem
                     component={Link}

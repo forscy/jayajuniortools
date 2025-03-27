@@ -11,17 +11,6 @@ import {
 
 const router = Router();
 
-// ===== Public Routes =====
-/**
- * GET routes - accessible to all users
- */
-// Get all products with pagination
-router.get("/", productController.getProducts);
-// Search products with filters
-router.get("/search", productController.searchProducts);
-// Get product by ID
-router.get("/:id", productController.getProductById);
-
 // ===== Protected Routes =====
 /**
  * POST, PUT, DELETE routes - require authentication and proper role
@@ -35,44 +24,57 @@ router.post(
   productController.createProduct
 );
 
-// Update an existing product
-router.put(
-  "/:id",
-  authenticateJWT,
-  verifyOwnerOrInventoryManagerRole,
-  // validateProductInput, // Uncomment if you have validation middleware
-  productController.updateProduct
-);
+// // ===== Public Routes =====
+// /**
+//  * GET routes - accessible to all users
+//  */
+// Get all products with pagination
+router.get("/", productController.getProducts);
+// // Search products with filters
+// router.get("/search", productController.searchProducts);
+// Get product by ID
+router.get("/:id", productController.getProductById);
 
-// Delete a product - only owner can delete
-router.delete(
-  "/:id",
-  authenticateJWT,
-  verifyOwnerRole,
-  productController.deleteProduct
-);
 
-// add stock to a product
-router.put(
-  "/:id/add-stock",
-  authenticateJWT,
-  verifyInventoryManagerRole,
-  productController.addStock
-);
+// // Update an existing product
+// router.put(
+//   "/:id",
+//   authenticateJWT,
+//   verifyOwnerOrInventoryManagerRole,
+//   // validateProductInput, // Uncomment if you have validation middleware
+//   productController.updateProduct
+// );
 
-// reduce stock from a product
-router.put(
-  "/:id/reduce-stock",
-  authenticateJWT,
-  verifyInventoryManagerRole,
-  productController.reduceStock
-);
+// // Delete a product - only owner can delete
+// router.delete(
+//   "/:id",
+//   authenticateJWT,
+//   verifyOwnerRole,
+//   productController.deleteProduct
+// );
 
-// remove stock from a product to zero
-router.put(
-  "/:id/remove-stock",
-  authenticateJWT,
-  verifyInventoryManagerRole,
-  productController.removeStock
-);
+// // add stock to a product
+// router.put(
+//   "/:id/add-stock",
+//   authenticateJWT,
+//   verifyInventoryManagerRole,
+//   productController.addStock
+// );
+
+// // reduce stock from a product
+// router.put(
+//   "/:id/reduce-stock",
+//   authenticateJWT,
+//   verifyInventoryManagerRole,
+//   productController.reduceStock
+// );
+
+// // remove stock from a product to zero
+// router.put(
+//   "/:id/remove-stock",
+//   authenticateJWT,
+//   verifyInventoryManagerRole,
+//   productController.removeStock
+// );
+
 export default router;
