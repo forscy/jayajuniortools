@@ -1,12 +1,7 @@
 
-export const PORT = 3003;
+// export const BASE_URL = 'http://localhost:3003';
+export const BASE_URL = 'http://api-jayajuniortools.forscy.my.id';
 
-// export const BASE_URL =
-// NODE_ENV === NodeEnv.production
-// ? "https://movie-nexus-backend.vercel.app"
-// : `http://localhost:${PORT}`;
-
-export const BASE_URL = `http://localhost:${PORT}`;
 
 export const BASE_API_URL = `${BASE_URL}/api`;
 export const BASE_AUTH_URL = `${BASE_API_URL}/auth`;

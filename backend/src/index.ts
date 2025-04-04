@@ -26,6 +26,7 @@ const allowedOrigins = [
   "https://completely-safe-moth.ngrok-free.app", // Ngrok URL
   "https://movie-nexus-kappa.vercel.app", // Vercel URL
   "https://movie-nexus-jtk.vercel.app", // Vercel URL
+  "https://jayajuniortools.forscy.my.id",
 ];
 
 app.use(

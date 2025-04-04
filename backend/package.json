@@ -9,9 +9,15 @@
     "seed:replace": "ts-node prisma/seed.ts --replace",
     "seed:reset": "ts-node prisma/seed.ts --reset",
     "dev": "nodemon src/index.ts",
-    "build": "prisma generate && tsc",
+    "build": "tsc",
     "start": "node dist/index.js",
-    "vercel-build": "prisma generate && prisma db push && ts-node prisma/seed.ts && tsc"
+    "start:server": "node index.js",
+    "db:reset": "prisma migrate reset --force --skip-seed",
+    "db:push": "prisma db push --force-reset --skip-seed",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:init": "prisma migrate dev --name init",
+    "vercel-build": "prisma generate && prisma migrate deploy && ts-node prisma/seed.ts && npx tsc"
   },
   "keywords": [],
   "author": "",
@@ -35,7 +41,6 @@
     "sharp": "^0.33.5",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
-    "typeorm": "^0.3.21",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
