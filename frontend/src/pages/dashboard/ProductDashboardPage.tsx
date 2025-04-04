@@ -17,14 +17,13 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
-import VisibilityIcon from '@mui/icons-material/Visibility';
-
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 // Components and Types
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
-import { fetchProducts } from "../../redux/slices/productSlice";
+import { fetchAllProducts } from "../../redux/slices/productSlice";
 import { useAppDispatch } from "../../redux/hooks";
 import { ProductDTO } from "../../dto/ProductDTO";
 
@@ -43,7 +42,7 @@ function ProductsTable({ products }: { products: ProductDTO[] }) {
 
   const handleDetail = (productId: number) => {
     navigate(`/products/${productId}`);
-  }
+  };
 
   return (
     <Box
@@ -108,8 +107,7 @@ function ProductsTable({ products }: { products: ProductDTO[] }) {
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Typography>{product?.quantityInStock}</Typography>
                   {product &&
-                    product.quantityInStock <=
-                      product.minimumStock! && (
+                    product.quantityInStock <= product.minimumStock! && (
                       <Chip size="sm" variant="soft" color="danger">
                         Low
                       </Chip>
@@ -178,7 +176,7 @@ export default function ProductsDashboard() {
   // Fetch products
   React.useEffect(() => {
     dispatch(
-      fetchProducts({
+      fetchAllProducts({
         page: 1,
         pageSize: 10,
       })

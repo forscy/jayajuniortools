@@ -23,6 +23,19 @@ class ProductController extends BaseController {
     return this.setAuthHeader().get<ProductDTO[]>("", params);
   }
 
+  // Get all products with optional pagination and filters
+  public async getAllProducts(params?: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    category?: number;
+    minPrice?: number;
+    maxPrice?: number;
+    sort?: string;
+  }) {
+    return this.setAuthHeader().get<ProductDTO[]>("/all", params);
+  }
+
   // Get a specific product by ID
   public async getProductById(id: number) {
     return this.setAuthHeader().get<ProductDTO>(`/${id}`);

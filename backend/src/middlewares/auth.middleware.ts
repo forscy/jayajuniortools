@@ -208,3 +208,36 @@ export const verifyOwnerOrShopkeeperRole = async (
 
   next(); // Jika pengguna adalah Owner atau Shopkeeper, lanjutkan ke proses berikutnya
 };
+
+// verify owner or shopkeeper or inventory manager
+export const verifyOwnerOrInventoryManagerOrShopkeeperRole = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const email = (req as any).user?.email; // Mendapatkan email dari JWT
+
+  if (!email) {
+    sendResponse(res, 401, "error", "User not authenticated");
+    return;
+  }
+
+  // Cek apakah pengguna memiliki role 'OWNER' atau 'SHOPKEEPER'
+  const userRole = await prisma.user.findFirst({
+    where: {
+      email: email,
+      OR: [
+        { role: Role.OWNER },
+        { role: Role.INVENTORY_MANAGER },
+        { role: Role.SHOPKEEPER },
+      ],
+    },
+  });
+
+  if (!userRole) {
+    sendResponse(res, 403, "error", "User is not an Owner or Shopkeeper");
+    return;
+  }
+
+  next(); // Jika pengguna adalah Owner atau Shopkeeper, lanjutkan ke proses berikutnya
+};

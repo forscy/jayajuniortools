@@ -1,3 +1,11 @@
+export enum ProductStatus {
+  AVAILABLE = "AVAILABLE", // Produk tersedia untuk dijual
+  COMMING_SOON = "COMMING_SOON", // Produk akan datang
+  DELETED = "DELETED", // Produk dihapus dari daftar
+  ARCHIVED = "ARCHIVED", // Produk diarsipkan
+  SUSPENDED = "SUSPENDED" // Produk dihentikan sementara
+}
+
 enum DiscountType {
   PERCENTAGE = "PERCENTAGE", // Diskon persentase (mis. 10%)
   FIXED = "FIXED", // Diskon nominal tetap (mis. Rp 10.000)
@@ -42,6 +50,7 @@ export interface ProductDTO {
   wholesalePrice?: number;
   minWholesaleQty?: number;
   sku?: string;
+  productStatus?: ProductStatus | null;
 
   // inventory
   quantityInStock: number;

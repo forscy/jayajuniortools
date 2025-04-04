@@ -37,20 +37,20 @@ enum Role {
 }
 
 model Product {
-  id              Int      @id @default(autoincrement())
-  name            String   @unique
+  id              Int            @id @default(autoincrement())
+  name            String         @unique
   description     String?
   retailPrice     Float // Harga eceran
   wholesalePrice  Float? // Harga grosir
   minWholesaleQty Int? // Minimum pembelian untuk harga grosir
   sku             String?
-  
+  productStatus   ProductStatus? @default(AVAILABLE) // Status produk
   // inventory
-  locationName    String   @default("Main Warehouse")
-  quantityInStock Int      @default(0)
-  minimumStock    Int      @default(5)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  locationName    String?        @default("Main Warehouse")
+  quantityInStock Int            @default(0)
+  minimumStock    Int?           @default(1)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   // Relasi one-to-one dengan Inventory
   // inventory   Inventory? @relation(name: "InventoryToProduct", fields: [inventoryId], references: [productId])
@@ -65,7 +65,15 @@ model Product {
   brand   Brand? @relation(fields: [brandId], references: [id])
   brandId Int?
 
-  reviews   Review[] // Relasi ke review produk
+  reviews Review[] // Relasi ke review produk
+}
+
+enum ProductStatus {
+  AVAILABLE // Produk tersedia untuk dijual
+  COMMING_SOON // Produk akan datang
+  DELETED // Produk dihapus dari daftar
+  ARCHIVED // Produk diarsipkan
+  SUSPENDED // Produk dihentikan sementara
 }
 
 model Category {
@@ -146,12 +154,12 @@ model Supplier {
 
 // Inventory-Supplier Table
 model InventorySupplier {
-  id          Int       @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   inventoryId Int
   supplierId  Int
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now())
-  supplier    Supplier  @relation(fields: [supplierId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+  supplier    Supplier @relation(fields: [supplierId], references: [id])
 
   @@unique([inventoryId, supplierId])
 }
@@ -183,28 +191,6 @@ model ProductImage {
   productId Int
 }
 
-// Store
-model Store {
-  id               Int               @id @default(autoincrement())
-  name             String            @unique
-  address          String
-  phone            String?
-  email            String?
-  description      String?
-  logo             String?
-  banner           String?
-  operationalHours OperationalHour[]
-}
-
-model OperationalHour {
-  id        Int    @id @default(autoincrement())
-  storeId   Int
-  day       Day
-  openTime  String
-  closeTime String
-  store     Store  @relation(fields: [storeId], references: [id])
-}
-
 enum Day {
   MONDAY
   TUESDAY
@@ -214,3 +200,5 @@ enum Day {
   SATURDAY
   SUNDAY
 }
+
+// ORDER and TRANSACTION
