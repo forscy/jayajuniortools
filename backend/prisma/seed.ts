@@ -10,6 +10,20 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+// Delete all existing data in the database
+const deleteAllData = async () => {
+  await prisma.review.deleteMany();
+  await prisma.wishlist.deleteMany();
+  await prisma.productImage.deleteMany();
+  await prisma.productCategory.deleteMany();
+  await prisma.discount.deleteMany();
+  await prisma.product.deleteMany();
+  await prisma.brand.deleteMany();
+  await prisma.category.deleteMany();
+  await prisma.user.deleteMany(); // Delete all users
+  console.log("Semua data dihapus!");
+}
+
 const createUsers = async () => {
   const hashPassword = await bcrypt.hash("securepassword", 10); // Meng-hash password
 
@@ -276,8 +290,7 @@ const createBrands = async () => {
 
 // Create products with inventories
 const createProducts = async () => {
-
-    // Product categories relationship
+  // Product categories relationship
   // Products data
   const products = [
     {
@@ -400,7 +413,6 @@ const createProducts = async () => {
       });
     }
   }
-  
 
   const productCategories = [
     { productId: 1, categoryName: "Mesin Perkakas" }, // Mesin Bor -> Mesin Perkakas
@@ -421,7 +433,7 @@ const createProducts = async () => {
     const existing = await prisma.productCategory.findFirst({
       where: {
         productId: pc.productId,
-        categoryName: pc.categoryName
+        categoryName: pc.categoryName,
       },
     });
 
@@ -434,15 +446,42 @@ const createProducts = async () => {
 
   // Product images
   const productImages = [
-    { productId: 1, url: "http://localhost:3003/uploads/products/no-product-image.png" },
-    { productId: 1, url: "http://localhost:3003/uploads/products/no-product-image.png" },
-    { productId: 2, url: "http://localhost:3003/uploads/products/no-product-image.png" },
-    { productId: 3, url: "http://localhost:3003/uploads/products/no-product-image.png" },
-    { productId: 4, url: "http://localhost:3003/uploads/products/no-product-image.png" },
-    { productId: 5, url: "http://localhost:3003/uploads/products/no-product-image.png" },
-    { productId: 6, url: "http://localhost:3003/uploads/products/no-product-image.png" },
-    { productId: 7, url: "http://localhost:3003/uploads/products/no-product-image.png" },
-    { productId: 8, url: "http://localhost:3003/uploads/products/no-product-image.png" },
+    {
+      productId: 1,
+      url: "https://cdn.vectorstock.com/i/500p/46/50/missing-picture-page-for-website-design-or-mobile-vector-27814650.jpg",
+    },
+    {
+      productId: 1,
+      url: "https://cdn.vectorstock.com/i/500p/46/50/missing-picture-page-for-website-design-or-mobile-vector-27814650.jpg",
+    },
+    {
+      productId: 2,
+      url: "https://cdn.vectorstock.com/i/500p/46/50/missing-picture-page-for-website-design-or-mobile-vector-27814650.jpg",
+    },
+    {
+      productId: 3,
+      url: "https://cdn.vectorstock.com/i/500p/46/50/missing-picture-page-for-website-design-or-mobile-vector-27814650.jpg",
+    },
+    {
+      productId: 4,
+      url: "https://cdn.vectorstock.com/i/500p/46/50/missing-picture-page-for-website-design-or-mobile-vector-27814650.jpg",
+    },
+    {
+      productId: 5,
+      url: "https://cdn.vectorstock.com/i/500p/46/50/missing-picture-page-for-website-design-or-mobile-vector-27814650.jpg",
+    },
+    {
+      productId: 6,
+      url: "https://cdn.vectorstock.com/i/500p/46/50/missing-picture-page-for-website-design-or-mobile-vector-27814650.jpg",
+    },
+    {
+      productId: 7,
+      url: "https://cdn.vectorstock.com/i/500p/46/50/missing-picture-page-for-website-design-or-mobile-vector-27814650.jpg",
+    },
+    {
+      productId: 8,
+      url: "https://cdn.vectorstock.com/i/500p/46/50/missing-picture-page-for-website-design-or-mobile-vector-27814650.jpg",
+    },
   ];
 
   // Create product images
@@ -603,6 +642,7 @@ const createReviews = async () => {
 
 const runSeeder = async () => {
   try {
+    await deleteAllData();
     await createUsers();
     await createCategories();
     await createBrands();

@@ -121,7 +121,7 @@ const DetailProductPage: React.FC = () => {
   const imageUrls = product.imageUrls || [];
   const mainImageUrl = imageUrls.length > 0 
     ? imageUrls[selectedImageIndex]
-    : 'http://localhost:3003/uploads/products/no-product-image.png';
+    : 'https://i0.wp.com/tinasbotanicals.com/wp-content/uploads/2025/01/No-Product-Image-Available.png?fit=800%2C800&ssl=1';
   
   const discountedRetailPrice = calculateDiscountedPrice(product.retailPrice, product.discount);
   const discountedWholesalePrice = product.wholesalePrice 

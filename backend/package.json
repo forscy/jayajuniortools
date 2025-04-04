@@ -11,6 +11,12 @@
     "dev": "nodemon src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "start:server": "node index.js",
+    "db:reset": "prisma migrate reset --force --skip-seed",
+    "db:push": "prisma db push --force-reset --skip-seed",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:init": "prisma migrate dev --name init",
     "vercel-build": "prisma generate && prisma migrate deploy && ts-node prisma/seed.ts && npx tsc"
   },
   "keywords": [],
