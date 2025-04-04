@@ -9,7 +9,7 @@ import {
   Stack,
   Button,
 } from "@mui/joy";
-import { ProductDTO, DiscountDTO } from "../dto/ProductDTO";
+import { ProductDTO, DiscountDTO, ProductStatus } from "../dto/ProductDTO";
 import noProductImage from "../assets/images/no-product-image.png";
 import StarIcon from "@mui/icons-material/Star";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
@@ -38,7 +38,28 @@ export const ProductCard = ({ product }: { product: ProductDTO }) => {
   // Since we don't have reviews in ProductDTO, we can set a default or remove this feature
   // For now, I'll keep it with a default of 0
   const avgRating = 0;
+  // Perbaikan logic penentuan warna status
+  const getStatusColor = (status?: ProductStatus | null) => {
+    if (!status) return "neutral";
 
+    switch (status) {
+      case ProductStatus.AVAILABLE:
+        return "success";
+      case ProductStatus.COMMING_SOON:
+        return "primary";
+      case ProductStatus.SUSPENDED:
+        return "warning";
+      case ProductStatus.DELETED:
+      case ProductStatus.ARCHIVED:
+        return "danger";
+      default:
+        return "neutral";
+    }
+  };
+
+  const statusColor = getStatusColor(product.productStatus);
+
+  // ...
   return (
     <Card
       variant="outlined"
@@ -52,7 +73,7 @@ export const ProductCard = ({ product }: { product: ProductDTO }) => {
         <CardOverflow>
           <AspectRatio ratio="1">
             {!product.imageUrls || product.imageUrls.length === 0 ? (
-              <img src={noProductImage} alt="default"/>
+              <img src={noProductImage} alt="default" />
             ) : (
               <img
                 src={product.imageUrls[0]}
@@ -80,10 +101,11 @@ export const ProductCard = ({ product }: { product: ProductDTO }) => {
           )}
         </CardOverflow>
         <CardContent sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
+          {product.productStatus && (
+            <Chip color={statusColor}>{product.productStatus}</Chip>
+          )}
           <Typography level="body-xs" sx={{ mb: 0.5 }}>
-            {product.categories?.length
-              ? product.categories[0]
-              : ""}
+            {product.categories?.length ? product.categories[0] : ""}
           </Typography>
           <Typography
             level="title-md"

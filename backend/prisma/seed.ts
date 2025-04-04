@@ -3,6 +3,7 @@ import {
   Category,
   DiscountType,
   PrismaClient,
+  ProductStatus,
   Role,
   UserStatus,
 } from "@prisma/client";
@@ -22,7 +23,7 @@ const deleteAllData = async () => {
   await prisma.category.deleteMany();
   await prisma.user.deleteMany(); // Delete all users
   console.log("Semua data dihapus!");
-}
+};
 
 const createUsers = async () => {
   const hashPassword = await bcrypt.hash("securepassword", 10); // Meng-hash password
@@ -372,6 +373,7 @@ const createProducts = async () => {
       locationName: "Main Warehouse",
       quantityInStock: 40,
       minimumStock: 8,
+      productStatus: ProductStatus.COMMING_SOON,
     },
     {
       id: 7,
@@ -385,6 +387,7 @@ const createProducts = async () => {
       locationName: "Main Warehouse",
       quantityInStock: 35,
       minimumStock: 7,
+      productStatus: ProductStatus.COMMING_SOON,
     },
     {
       id: 8,
@@ -398,6 +401,7 @@ const createProducts = async () => {
       locationName: "Main Warehouse",
       quantityInStock: 20,
       minimumStock: 5,
+      productStatus: ProductStatus.DELETED,
     },
   ];
 

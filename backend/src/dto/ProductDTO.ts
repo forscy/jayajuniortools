@@ -1,4 +1,12 @@
-import { DiscountType } from "@prisma/client";
+import { DiscountType, Product } from "@prisma/client";
+
+export enum ProductStatus {
+  AVAILABLE = "AVAILABLE", // Produk tersedia untuk dijual
+  COMMING_SOON = "COMMING_SOON", // Produk akan datang
+  DELETED = "DELETED", // Produk dihapus dari daftar
+  ARCHIVED = "ARCHIVED", // Produk diarsipkan
+  SUSPENDED = "SUSPENDED" // Produk dihentikan sementara
+}
 
 export interface DiscountDTO {
   name: string;
@@ -13,8 +21,8 @@ export interface DiscountDTO {
 
 export interface BrandDTO {
   name: string;
-  description: string;
-  logoUrl: string;
+  description: string | null;
+  logoUrl: string | null;
 }
 
 export interface InventoryDTO {
@@ -31,22 +39,23 @@ export interface ReviewDTO {
 
 // dto for create product
 export interface ProductDTO {
-  id?: number;
+  id?: number | null;
   name: string;
-  description?: string;
+  description?: string | null;
   retailPrice: number;
-  wholesalePrice?: number;
-  minWholesaleQty?: number;
-  sku?: string;
+  wholesalePrice?: number | null;
+  minWholesaleQty?: number | null;
+  sku?: string | null;
+  productStatus?: ProductStatus | null;
 
   // inventory
+  locationName?: string | null;
   quantityInStock: number;
-  locationName?: string;
-  minimumStock?: number;
+  minimumStock?: number | null;
 
   // relationship
-  categories?: string[];
-  imageUrls?: string[];
-  discount?: DiscountDTO;
-  brand?: BrandDTO;
+  categories?: string[] | null;
+  imageUrls?: string[] | null;
+  discount?: DiscountDTO | null;
+  brand?: BrandDTO | null;
 }

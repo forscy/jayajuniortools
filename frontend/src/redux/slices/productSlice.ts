@@ -68,6 +68,32 @@ export const fetchProducts = createAsyncThunk(
   }
 );
 
+// Async thunk for fetching products
+export const fetchAllProducts = createAsyncThunk(
+  "product/fetchAllProducts",
+  async (
+    params: {
+      page?: number;
+      pageSize?: number;
+      search?: string;
+      category?: number;
+      minPrice?: number;
+      maxPrice?: number;
+      sort?: string;
+    } = {},
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await productController.getAllProducts(params || {});
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch products"
+      );
+    }
+  }
+);
+
 // // Async thunk for adding a product
 // export const addProduct = createAsyncThunk(
 //   "product/addProduct",
@@ -140,6 +166,23 @@ const productSlice = createSlice({
       }
     );
     builder.addCase(fetchProducts.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
+    });
+
+    // Fetch all products
+    builder.addCase(fetchAllProducts.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    });
+    builder.addCase(
+      fetchAllProducts.fulfilled,
+      (state, action: PayloadAction<ProductDTO[]>) => {
+        state.loading = false;
+        state.products = action.payload;
+      }
+    );
+    builder.addCase(fetchAllProducts.rejected, (state, action) => {
       state.loading = false;
       state.error = action.payload as string;
     });
