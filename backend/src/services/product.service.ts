@@ -1,6 +1,6 @@
 import { ProductStatus } from "@prisma/client";
 import { prisma } from "../config/client.config";
-import { ProductDTO } from "../dto/ProductDTO";
+import { ProductDTO } from "../dto/product.dto";
 import { Pagination } from "../utils/responseWrapper";
 
 // Helper function to handle category creation and linking

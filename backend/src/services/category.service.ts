@@ -1,5 +1,5 @@
 import { prisma } from "../config/client.config";
-import { CategoryDTO } from "../dto/CategoryDTO";
+import { CategoryDTO } from "../dto/category.dto";
 // Create a new category
 export const createCategory = async (categoryData: CategoryDTO) => {
   try {

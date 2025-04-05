@@ -1,11 +1,10 @@
 // src/middlewares/auth.middleware.ts
 
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
 import { prisma } from "../config/client.config";
 import { Role } from "@prisma/client";
 import { sendResponse } from "../utils/responseWrapper";
-import { extractBearerToken } from "../utils/auth";
+import { extractBearerToken, verifyToken } from "../utils/auth.util";
 
 export const authenticateJWT = (
   req: Request,
@@ -14,25 +13,32 @@ export const authenticateJWT = (
 ) => {
   const token = extractBearerToken(req); // Mendapatkan token dari request headers
   if (!token) {
-    sendResponse(res, 401, "error", "User not authenticated");
+    sendResponse({
+      res,
+      statusCode: 401,
+      status: "error",
+      message: "User not authenticated",
+    });
     return; // Jika token tidak ada, kirim respon error
   }
-  try {
-    jwt.verify(token, process.env.JWT_SECRET!, (err: any, user: any) => {
-      if (err) {
-        sendResponse(res, 403, "error", err.message || "Invalid token");
-        return; // Jika token tidak valid, kirim res
-      }
-      (req as any).user = user;
-      next();
+
+  const { valid, message, payload } = verifyToken(token);
+  if (!valid) {
+    sendResponse({
+      res,
+      statusCode: 403,
+      status: "error",
+      message: message || "Invalid token",
     });
-  } catch (error: any) {
-    sendResponse(res, 500, "error", error.message || "Error is not defined");
-    return;
+
+    return; // Jika token tidak valid, kirim respon error
   }
+
+  // Menyimpan payload dari token ke dalam request untuk digunakan di route berikutnya
+  (req as any).user = payload;
+  next();
 };
 
-// Middleware untuk memastikan pengguna adalah Owner
 // Middleware untuk memastikan pengguna adalah Owner
 export const verifyOwnerRole = async (
   req: Request,
@@ -42,8 +48,13 @@ export const verifyOwnerRole = async (
   const email = (req as any).user?.email; // Mendapatkan id dari JWT
 
   if (!email) {
-    sendResponse(res, 401, "error", "User not authenticated");
-    return;
+    sendResponse({
+      res,
+      statusCode: 401,
+      status: "error",
+      message: "User not authenticated",
+    });
+    data: return;
   }
 
   // Cek apakah pengguna memiliki role 'OWNER'
@@ -53,11 +64,16 @@ export const verifyOwnerRole = async (
   });
 
   if (!user || user.role !== Role.OWNER) {
-    sendResponse(res, 403, "error", "User is not an Owner");
+    sendResponse({
+      res,
+      statusCode: 403,
+      status: "error",
+      message: "User is not an Owner",
+    });
     return;
   }
 
-  next(); // Jika pengguna adalah Owner, lanjutkan ke proses berikutnya
+  next(); // Jika pengguna adalah Owner lanjutkan ke proses berikutnya
 };
 // Middleware untuk memastikan pengguna adalah Shopkeeper
 export const verifyShopkeeperRole = async (
@@ -68,8 +84,13 @@ export const verifyShopkeeperRole = async (
   const email = (req as any).user?.email; // Mendapatkan email dari JWT
 
   if (!email) {
-    sendResponse(res, 401, "error", "User not authenticated");
-    return;
+    sendResponse({
+      res,
+      statusCode: 401,
+      status: "error",
+      message: "User not authenticated",
+    });
+    data: return;
   }
 
   // Cek apakah pengguna memiliki role 'SHOPKEEPER'
@@ -81,8 +102,13 @@ export const verifyShopkeeperRole = async (
   });
 
   if (!userRole) {
-    sendResponse(res, 403, "error", "User is not a Shopkeeper");
-    return;
+    sendResponse({
+      res,
+      statusCode: 403,
+      status: "error",
+      message: "User is not a Shopkeeper",
+    });
+    data: return;
   }
 
   next(); // Jika pengguna adalah Shopkeeper, lanjutkan ke proses berikutnya
@@ -97,8 +123,13 @@ export const verifyInventoryManagerRole = async (
   const email = (req as any).user?.email; // Mendapatkan email dari JWT
 
   if (!email) {
-    sendResponse(res, 401, "error", "User not authenticated");
-    return;
+    sendResponse({
+      res,
+      statusCode: 401,
+      status: "error",
+      message: "User not authenticated",
+    });
+    data: return;
   }
 
   // Cek apakah pengguna memiliki role 'INVENTORY_MANAGER'
@@ -110,8 +141,13 @@ export const verifyInventoryManagerRole = async (
   });
 
   if (!userRole) {
-    sendResponse(res, 403, "error", "User is not an Inventory Manager");
-    return;
+    sendResponse({
+      res,
+      statusCode: 403,
+      status: "error",
+      message: "User is not an Inventory Manager",
+    });
+    data: return;
   }
 
   next(); // Jika pengguna adalah Inventory Manager, lanjutkan ke proses berikutnya
@@ -126,7 +162,12 @@ export const verifyBuyerRole = async (
   const email = (req as any).user?.email; // Mendapatkan email dari JWT
 
   if (!email) {
-    sendResponse(res, 401, "error", "User not authenticated");
+    sendResponse({
+      res,
+      statusCode: 401,
+      status: "error",
+      message: "User not authenticated",
+    });
     return;
   }
 
@@ -139,7 +180,12 @@ export const verifyBuyerRole = async (
   });
 
   if (!userRole) {
-    sendResponse(res, 403, "error", "User is not a Buyer");
+    sendResponse({
+      res,
+      statusCode: 403,
+      status: "error",
+      message: "User is not a Buyer",
+    });
     return;
   }
 
@@ -155,7 +201,13 @@ export const verifyOwnerOrInventoryManagerRole = async (
   const email = (req as any).user?.email; // Mendapatkan email dari JWT
 
   if (!email) {
-    sendResponse(res, 401, "error", "User not authenticated");
+    sendResponse({
+      res,
+      statusCode: 401,
+      status: "error",
+      message: "User not authenticated",
+    });
+
     return;
   }
 
@@ -168,12 +220,12 @@ export const verifyOwnerOrInventoryManagerRole = async (
   });
 
   if (!userRole) {
-    sendResponse(
+    sendResponse({
       res,
-      403,
-      "error",
-      "User is not an Owner or Inventory Manager"
-    );
+      statusCode: 403,
+      status: "error",
+      message: "User is not an Owner or Inventory Manager",
+    });
     return;
   }
 
@@ -189,7 +241,12 @@ export const verifyOwnerOrShopkeeperRole = async (
   const email = (req as any).user?.email; // Mendapatkan email dari JWT
 
   if (!email) {
-    sendResponse(res, 401, "error", "User not authenticated");
+    sendResponse({
+      res,
+      statusCode: 401,
+      status: "error",
+      message: "User not authenticated",
+    });
     return;
   }
 
@@ -202,7 +259,12 @@ export const verifyOwnerOrShopkeeperRole = async (
   });
 
   if (!userRole) {
-    sendResponse(res, 403, "error", "User is not an Owner or Shopkeeper");
+    sendResponse({
+      res,
+      statusCode: 403,
+      status: "error",
+      message: "User is not an Owner or Shopkeeper",
+    });
     return;
   }
 
@@ -218,7 +280,13 @@ export const verifyOwnerOrInventoryManagerOrShopkeeperRole = async (
   const email = (req as any).user?.email; // Mendapatkan email dari JWT
 
   if (!email) {
-    sendResponse(res, 401, "error", "User not authenticated");
+    sendResponse({
+      res,
+      statusCode: 401,
+      status: "error",
+      message: "User not authenticated",
+    });
+
     return;
   }
 
@@ -235,7 +303,12 @@ export const verifyOwnerOrInventoryManagerOrShopkeeperRole = async (
   });
 
   if (!userRole) {
-    sendResponse(res, 403, "error", "User is not an Owner or Shopkeeper");
+    sendResponse({
+      res,
+      statusCode: 403,
+      status: "error",
+      message: "User is not an Owner or Shopkeeper",
+    });
     return;
   }
 
