@@ -209,8 +209,9 @@ const HeroBanner = () => {
                 borderRadius: { xs: "lg", sm: "xl" },
                 p: { xs: 2, sm: 3, md: 4 },
                 backdropFilter: "blur(8px)",
-                backgroundColor: "rgba(255, 255, 255, 0.8)",
+                backgroundColor: "primary.plainActiveBg",
                 boxShadow: "lg",
+                color: "tomato",
               }}
             >
               <Typography
