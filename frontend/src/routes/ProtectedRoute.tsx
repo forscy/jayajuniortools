@@ -1,7 +1,7 @@
 // src/routes/ProtectedRoute.tsx
 import React from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { Role } from "../types/index";
+import { Role } from "../dto/user.dto";
 import { useAppSelector } from "../redux/hooks";
 import { RootState } from "../redux/store";
 

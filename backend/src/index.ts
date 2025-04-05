@@ -23,9 +23,8 @@ const allowedOrigins = [
   "http://localhost:3003",
   "http://localhost:3008",
   "http://localhost:3009",
+  "http://localhost:50780",
   "https://completely-safe-moth.ngrok-free.app", // Ngrok URL
-  "https://movie-nexus-kappa.vercel.app", // Vercel URL
-  "https://movie-nexus-jtk.vercel.app", // Vercel URL
   "https://jayajuniortools.forscy.my.id",
 ];
 
@@ -51,8 +50,7 @@ app.get("/", (req: Request, res: Response) => {
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files
-app.use('/uploads/products', express.static(storageConfig.uploadDir));
-
+app.use("/uploads/products", express.static(storageConfig.uploadDir));
 
 // Setup Swagger options
 const swaggerOptions = {

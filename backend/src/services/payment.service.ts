@@ -3,6 +3,37 @@ import { prisma } from "../config/client.config";
 import { PaymentDTO } from "../dto/payment.dto";
 import { amountChange } from "../utils/transaction.util";
 
+// Fungsi untuk mapping payment ke DTO
+const mapPaymentToDTO = (payment: any): PaymentDTO => {
+  return {
+    id: payment.id,
+    amount: payment.amount,
+    amountPaid: payment.amountPaid,
+    amountChange: payment.amountChange,
+
+    paymentDate: payment.paymentDate
+      ? payment.paymentDate.toISOString()
+      : undefined,
+    paymentStatus: payment.paymentStatus,
+
+    createdAt: payment.createdAt.toISOString(),
+    updatedAt: payment.updatedAt.toISOString(),
+    orderId: payment.orderId,
+    receiver: mapReceiverToDTO(payment.receiver),
+  };
+};
+
+// Fungsi untuk mapping receiver ke DTO
+const mapReceiverToDTO = (receiver: any) => {
+  return {
+    id: receiver.id,
+    method: receiver.method,
+    provider: receiver.provider,
+    accountNumber: receiver.accountNumber,
+    accountHolderName: receiver.accountHolderName,
+  };
+};
+
 interface CreatePaymentParams {
   orderId: number;
   receiverId: number;
@@ -178,33 +209,58 @@ export const changePaymentReceiver = async ({
   }
 };
 
-// Fungsi untuk mapping payment ke DTO
-const mapPaymentToDTO = (payment: any): PaymentDTO => {
-  return {
-    id: payment.id,
-    amount: payment.amount,
-    amountPaid: payment.amountPaid,
-    amountChange: payment.amountChange,
+// Get all Payments
+export const getAllPayments = async (page: number = 1, limit: number = 10) => {
+  try {
+    const payments = await prisma.payment.findMany({
+      skip: (page - 1) * limit,
+      take: limit,
+      include: {
+        order: true,
+        receiver: true,
+      },
+    });
 
-    paymentDate: payment.paymentDate
-      ? payment.paymentDate.toISOString()
-      : undefined,
-    paymentStatus: payment.paymentStatus,
-
-    createdAt: payment.createdAt.toISOString(),
-    updatedAt: payment.updatedAt.toISOString(),
-    orderId: payment.orderId,
-    receiver: mapReceiverToDTO(payment.receiver),
-  };
+    return payments.map(mapPaymentToDTO);
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to fetch payments");
+  }
 };
 
-// Fungsi untuk mapping receiver ke DTO
-const mapReceiverToDTO = (receiver: any) => {
-  return {
-    id: receiver.id,
-    method: receiver.method,
-    provider: receiver.provider,
-    accountNumber: receiver.accountNumber,
-    accountHolderName: receiver.accountHolderName,
-  };
+// updatePaymentStatus
+export const updatePaymentStatus = async (
+  paymentId: number,
+  status: PaymentStatus
+): Promise<PaymentDTO> => {
+  try {
+    // check param is valid
+    if (!paymentId || !status) {
+      throw new Error("Invalid parameters");
+    }
+
+    // check payment is already exist
+    const existingPayment = await prisma.payment.findUnique({
+      where: { id: paymentId },
+    });
+    if (!existingPayment) {
+      throw new Error("Payment not found");
+    }
+
+    const payment = await prisma.payment.update({
+      where: { id: paymentId },
+      data: {
+        paymentStatus: status,
+      },
+      include: {
+        order: true,
+        receiver: true,
+      },
+    });
+
+    return mapPaymentToDTO(payment);
+  } catch (error: any) {
+    console.error(error);
+    throw new Error(error.message || "Failed to update payment status");
+  }
 };

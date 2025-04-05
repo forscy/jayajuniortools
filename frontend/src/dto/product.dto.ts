@@ -6,7 +6,7 @@ export enum ProductStatus {
   SUSPENDED = "SUSPENDED" // Produk dihentikan sementara
 }
 
-enum DiscountType {
+export enum DiscountType {
   PERCENTAGE = "PERCENTAGE", // Diskon persentase (mis. 10%)
   FIXED = "FIXED", // Diskon nominal tetap (mis. Rp 10.000)
   BUY_X_GET_Y = "BUY_X_GET_Y", // Beli X gratis Y (implementasi detail bisa di aplikasi)
@@ -25,8 +25,8 @@ export interface DiscountDTO {
 
 export interface BrandDTO {
   name: string;
-  description: string;
-  logoUrl: string;
+  description: string | null;
+  logoUrl: string | null;
 }
 
 export interface InventoryDTO {
@@ -43,23 +43,36 @@ export interface ReviewDTO {
 
 // dto for create product
 export interface ProductDTO {
-  id?: number;
+  id?: number | null;
   name: string;
-  description?: string;
+  description?: string | null;
   retailPrice: number;
-  wholesalePrice?: number;
-  minWholesaleQty?: number;
-  sku?: string;
+  wholesalePrice?: number | null;
+  minWholesaleQty?: number | null;
+  sku?: string | null;
   productStatus?: ProductStatus | null;
 
   // inventory
+  locationName?: string | null;
   quantityInStock: number;
-  locationName?: string;
-  minimumStock?: number;
+  minimumStock?: number | null;
 
   // relationship
-  categories?: string[];
-  imageUrls?: string[];
-  discount?: DiscountDTO;
-  brand?: BrandDTO;
+  categories?: string[] | null;
+  imageUrls?: string[] | null;
+  discount?: DiscountDTO | null;
+  brand?: BrandDTO | null;
+}
+
+export interface ProductFilters {
+  page: number;
+  pageSize: number;
+  search?: string;
+  status?: string;
+  category?: string;
+  stockLevel?: string;
+  priceMin?: number | null;
+  priceMax?: number | null;
+  sortBy: string;
+  sortOrder: 'asc' | 'desc';
 }

@@ -1,5 +1,5 @@
 import { BaseController, ApiResponse } from "./BaseController";
-import { BASE_API_URL } from "../types/constants";
+import { BASE_API_URL } from "../constants/url.constant";
 
 /**
  * Response type for image upload

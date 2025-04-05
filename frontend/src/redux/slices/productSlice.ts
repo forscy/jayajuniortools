@@ -1,13 +1,15 @@
 // src/redux/slices/productSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { ProductState } from "../../types";
+import { ProductState } from "../state/ProductState";
 import productController from "../../controllers/ProductController";
-import { ProductDTO } from "../../dto/ProductDTO";
+import { ProductDTO, ProductFilters } from "../../dto/product.dto";
+import { ApiResponse } from "../../controllers/BaseController";
 
 // Initial state
 const initialState: ProductState = {
   products: [],
   product: null,
+  currentProduct: null,
   loading: false,
   error: null,
 };
@@ -46,15 +48,7 @@ export const fetchProductById = createAsyncThunk(
 export const fetchProducts = createAsyncThunk(
   "product/fetchProducts",
   async (
-    params: {
-      page?: number;
-      pageSize?: number;
-      search?: string;
-      category?: number;
-      minPrice?: number;
-      maxPrice?: number;
-      sort?: string;
-    } = {},
+    params: ProductFilters | any,
     { rejectWithValue }
   ) => {
     try {
@@ -72,20 +66,12 @@ export const fetchProducts = createAsyncThunk(
 export const fetchAllProducts = createAsyncThunk(
   "product/fetchAllProducts",
   async (
-    params: {
-      page?: number;
-      pageSize?: number;
-      search?: string;
-      category?: number;
-      minPrice?: number;
-      maxPrice?: number;
-      sort?: string;
-    } = {},
+    params: ProductFilters,
     { rejectWithValue }
   ) => {
     try {
       const response = await productController.getAllProducts(params || {});
-      return response.data;
+      return response;
     } catch (error: any) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch products"
@@ -94,23 +80,23 @@ export const fetchAllProducts = createAsyncThunk(
   }
 );
 
-// // Async thunk for adding a product
-// export const addProduct = createAsyncThunk(
-//   "product/addProduct",
-//   async (
-//     productData: Omit<Product, "id" | "createdAt" | "updatedAt">,
-//     { getState, rejectWithValue }
-//   ) => {
-//     try {
-//       const response = await productController.createProduct(productData);
-//       return response.data;
-//     } catch (error: any) {
-//       return rejectWithValue(
-//         error.response?.data?.message || "Failed to add product"
-//       );
-//     }
-//   }
-// );
+// Update product
+export const updateProduct = createAsyncThunk(
+  "product/updateProduct",
+  async (
+    { id, productData }: { id: number; productData: Partial<ProductDTO> },
+    { getState, rejectWithValue }
+  ) => {
+    try {
+      const response = await productController.updateProduct(id, productData);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to update product"
+      );
+    }
+  }
+);
 
 // Async thunk for deleting a product
 export const deleteProduct = createAsyncThunk(
@@ -147,6 +133,7 @@ const productSlice = createSlice({
       (state, action: PayloadAction<ProductDTO>) => {
         state.loading = false;
         state.product = action.payload;
+        state.currentProduct = action.payload;
       }
     );
     builder.addCase(fetchProductById.rejected, (state, action) => {
@@ -177,9 +164,10 @@ const productSlice = createSlice({
     });
     builder.addCase(
       fetchAllProducts.fulfilled,
-      (state, action: PayloadAction<ProductDTO[]>) => {
+      (state, action: PayloadAction<ApiResponse<ProductDTO[]>>) => {
         state.loading = false;
-        state.products = action.payload;
+        state.products = action.payload.data;
+        state.pagination = action.payload.pagination;
       }
     );
     builder.addCase(fetchAllProducts.rejected, (state, action) => {
@@ -187,7 +175,7 @@ const productSlice = createSlice({
       state.error = action.payload as string;
     });
 
-    // Add product
+    // TODO: Add product
     builder.addCase(addProduct.pending, (state) => {
       state.loading = true;
       state.error = null;
@@ -226,6 +214,28 @@ const productSlice = createSlice({
       }
     );
     builder.addCase(deleteProduct.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
+    });
+
+    // TODO: Update product
+    builder.addCase(updateProduct.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    });
+    builder.addCase(
+      updateProduct.fulfilled,
+      (state, action: PayloadAction<ProductDTO>) => {
+        state.loading = false;
+        const index = state.products.findIndex(
+          (product) => product.id === action.payload.id
+        );
+        if (index !== -1) {
+          state.products[index] = action.payload;
+        }
+      }
+    );
+    builder.addCase(updateProduct.rejected, (state, action) => {
       state.loading = false;
       state.error = action.payload as string;
     });

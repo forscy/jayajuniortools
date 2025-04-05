@@ -76,6 +76,10 @@ const createUsers = async () => {
 
   const users = [
     {
+      name: "Pembeli Umum",
+      email: "pembeli.umum@forscy.my.id",
+    },
+    {
       name: "owner",
       email: "owner@gmail.com",
       password: hashPassword,

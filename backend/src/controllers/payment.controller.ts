@@ -31,7 +31,7 @@ export const createPayment = async (req: Request, res: Response) => {
 // Pay the payment
 export const payPayment = async (req: Request, res: Response) => {
   const { paymentId, amountPaid } = req.body;
-
+  console.info("Woi " + paymentId, amountPaid);
   try {
     const payment = await paymentService.payPayment(paymentId, amountPaid);
     return sendResponse({
@@ -68,6 +68,55 @@ export const getPaymentById = async (req: Request, res: Response) => {
     return sendResponse({
       res,
       statusCode: 404,
+      status: "error",
+      message: error.message,
+    });
+  }
+};
+
+// Get all payments
+export const getAllPayments = async (req: Request, res: Response) => {
+  const { page, limit } = req.query;
+
+  try {
+    const payments = await paymentService.getAllPayments(
+      Number(page) || 1,
+      Number(limit) || 10
+    );
+    return sendResponse({
+      res,
+      statusCode: 200,
+      status: "success",
+      message: "Payments retrieved successfully",
+      data: payments,
+    });
+  } catch (error: any) {
+    return sendResponse({
+      res,
+      statusCode: 400,
+      status: "error",
+      message: error.message,
+    });
+  }
+};
+
+// updatePaymentStatus
+export const updatePaymentStatus = async (req: Request, res: Response) => {
+  const { paymentId, status } = req.body;
+
+  try {
+    const payment = await paymentService.updatePaymentStatus(paymentId, status);
+    return sendResponse({
+      res,
+      statusCode: 200,
+      status: "success",
+      message: "Payment status updated successfully",
+      data: payment,
+    });
+  } catch (error: any) {
+    return sendResponse({
+      res,
+      statusCode: 400,
       status: "error",
       message: error.message,
     });

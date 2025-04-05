@@ -1,17 +1,19 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
 import { getTokenInLocalStorage } from "../utils/localStorageUtil";
 
+export interface Pagination {
+  total: number;
+  page: number;
+  pages: number;
+  limit: number;
+}
+
 // Definisikan tipe umum untuk struktur respons API dengan code numerik
 export interface ApiResponse<T> {
   status: "success" | "error";
   message: string;
   data: T;
-  pagination?: {
-    totalItems: number;
-    pageSize: number;
-    totalPages: number;
-    page: number;
-  };
+  pagination?: Pagination;
 }
 
 export abstract class BaseController {
@@ -21,7 +23,7 @@ export abstract class BaseController {
     this.api = axios.create({
       baseURL,
       withCredentials: withCredentials, // Jika perlu, bisa sesuaikan
-      headers: headers
+      headers: headers,
     });
   }
 
@@ -29,9 +31,9 @@ export abstract class BaseController {
   protected setAuthHeader() {
     const token = getTokenInLocalStorage();
     if (token) {
-      this.api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      this.api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     } else {
-      delete this.api.defaults.headers.common['Authorization'];
+      delete this.api.defaults.headers.common["Authorization"];
     }
     return this;
   }

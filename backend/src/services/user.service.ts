@@ -5,6 +5,7 @@ export const getAllUsers = async () => {
   try {
     const users = await prisma.user.findMany({
       select: {
+        id: true,
         name: true,
         email: true,
         role: true,
@@ -26,6 +27,7 @@ export const getUserByEmail = async (email: string) => {
     const user = await prisma.user.findUnique({
       where: { email },
       select: {
+        id: true,
         name: true,
         email: true,
         role: true,

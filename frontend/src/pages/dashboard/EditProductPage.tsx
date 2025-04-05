@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { addProduct } from "../../redux/slices/productSlice";
+import {
+  fetchProductById,
+  updateProduct,
+} from "../../redux/slices/productSlice";
 import { fetchCategories } from "../../redux/slices/categorySlice";
 import imageController from "../../controllers/ImageController";
 import { ProductDTO, ProductStatus } from "../../dto/product.dto";
@@ -34,6 +37,8 @@ import {
   TabPanel,
   Tabs,
   Tooltip,
+  Breadcrumbs,
+  Link,
 } from "@mui/joy";
 
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -46,14 +51,18 @@ import QrCodeIcon from "@mui/icons-material/QrCode";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
 import CategoryIcon from "@mui/icons-material/Category";
-// import DescriptionIcon from "@mui/icons-material/Description";
 import ImageIcon from "@mui/icons-material/Image";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+// import EditIcon from "@mui/icons-material/Edit";
+import HomeIcon from "@mui/icons-material/Home";
 
-const AddProductPage: React.FC = () => {
+const EditProductPage: React.FC = () => {
+  const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { loading, error } = useAppSelector((state) => state.product);
+  const { currentProduct, loading, error } = useAppSelector(
+    (state) => state.product
+  );
   const { categories } = useAppSelector((state) => state.category);
 
   // Form state
@@ -91,10 +100,38 @@ const AddProductPage: React.FC = () => {
   // Active tab for mobile view
   const [activeTab, setActiveTab] = useState(0);
 
-  // Fetch categories on component mount
+  // Fetch product and categories data on component mount
   useEffect(() => {
-    dispatch(fetchCategories());
-  }, [dispatch]);
+    if (productId) {
+      dispatch(fetchProductById(parseInt(productId)));
+      dispatch(fetchCategories());
+    }
+  }, [dispatch, productId]);
+
+  // When currentProduct changes, update the form
+  useEffect(() => {
+    if (currentProduct) {
+      setProductData({
+        id: currentProduct.id,
+        name: currentProduct.name,
+        description: currentProduct.description || "",
+        retailPrice: currentProduct.retailPrice,
+        wholesalePrice: currentProduct.wholesalePrice || 0,
+        minWholesaleQty: currentProduct.minWholesaleQty || 0,
+        sku: currentProduct.sku || "",
+        quantityInStock: currentProduct.quantityInStock,
+        minimumStock: currentProduct.minimumStock || 5,
+        categories: currentProduct.categories || [],
+        imageUrls: currentProduct.imageUrls || [],
+        productStatus: currentProduct.productStatus || ProductStatus.AVAILABLE,
+      });
+
+      // If there are images, set previews
+      if (currentProduct.imageUrls && currentProduct.imageUrls.length > 0) {
+        setImagesPreviews(currentProduct.imageUrls);
+      }
+    }
+  }, [currentProduct]);
 
   // Handle form input changes
   const handleInputChange = (
@@ -105,7 +142,7 @@ const AddProductPage: React.FC = () => {
       ...prev,
       [name]:
         name.includes("Price") || name.includes("Qty") || name.includes("Stock")
-          ? parseFloat(value) || null
+          ? parseFloat(value) || 0
           : value,
     }));
 
@@ -145,8 +182,10 @@ const AddProductPage: React.FC = () => {
     if (!e.target.files || e.target.files.length === 0) return;
 
     // Check if adding more would exceed the limit
+    const existingImagesCount = productData.imageUrls?.length || 0;
     const newFiles = Array.from(e.target.files);
-    if (imageFiles.length + newFiles.length > 5) {
+
+    if (existingImagesCount + imageFiles.length + newFiles.length > 5) {
       setUploadError("Maximum 5 images allowed");
       return;
     }
@@ -167,38 +206,40 @@ const AddProductPage: React.FC = () => {
 
     // Create preview URLs
     const newPreviews = newFiles.map((file) => URL.createObjectURL(file));
-    setImagesPreviews([...imagesPreviews, ...newPreviews]);
+    setImagesPreviews([...(productData.imageUrls || []), ...newPreviews]);
   };
 
   // Remove image
   const handleRemoveImage = (index: number) => {
-    // If the image was already uploaded, we'll need to update productData.imageUrls
-    const wasUploaded = index < (productData.imageUrls?.length || 0);
-
-    if (wasUploaded && productData.imageUrls) {
-      // Remove from the uploaded URLs
-      const newImageUrls = [...productData.imageUrls];
+    // If this is an already uploaded image
+    if (index < (productData.imageUrls?.length || 0)) {
+      const newImageUrls = [...(productData.imageUrls || [])];
       newImageUrls.splice(index, 1);
       setProductData({
         ...productData,
         imageUrls: newImageUrls,
       });
-    }
 
-    // Clean up the preview
-    if (index < imagesPreviews.length) {
+      // Also update previews
       const newPreviews = [...imagesPreviews];
-      // Release object URL to prevent memory leaks
-      URL.revokeObjectURL(newPreviews[index]);
       newPreviews.splice(index, 1);
       setImagesPreviews(newPreviews);
     }
+    // If this is a new image not yet uploaded
+    else {
+      const localIndex = index - (productData.imageUrls?.length || 0);
+      if (localIndex >= 0 && localIndex < imageFiles.length) {
+        // Remove from files array
+        const newFiles = [...imageFiles];
+        newFiles.splice(localIndex, 1);
+        setImageFiles(newFiles);
 
-    // Remove from files array
-    if (index < imageFiles.length) {
-      const newFiles = [...imageFiles];
-      newFiles.splice(index, 1);
-      setImageFiles(newFiles);
+        // Remove preview
+        const newPreviews = [...imagesPreviews];
+        URL.revokeObjectURL(newPreviews[index]); // Release object URL to prevent memory leaks
+        newPreviews.splice(index, 1);
+        setImagesPreviews(newPreviews);
+      }
     }
   };
 
@@ -290,10 +331,11 @@ const AddProductPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    if (!validateForm() || !productId) return;
 
     try {
       let imageUrls: string[] = [...(productData.imageUrls || [])];
+
       // Upload any new images
       if (imageFiles.length > 0) {
         const newUrls = await uploadImages();
@@ -303,7 +345,8 @@ const AddProductPage: React.FC = () => {
       }
 
       // Create the product data to match the API's expected format
-      const productToAdd: ProductDTO = {
+      const productToUpdate: ProductDTO = {
+        id: parseInt(productId),
         name: productData.name!,
         description: productData.description || null,
         retailPrice: productData.retailPrice!,
@@ -319,11 +362,13 @@ const AddProductPage: React.FC = () => {
         imageUrls: imageUrls.length > 0 ? imageUrls : null,
       };
 
-      console.info("Adding product:", productToAdd);
+      console.info("Updating product:", productToUpdate);
 
-      const resultAction = await dispatch(addProduct(productToAdd));
+      const resultAction = await dispatch(
+        updateProduct({ id: parseInt(productId), productData: productToUpdate })
+      );
 
-      if (addProduct.fulfilled.match(resultAction)) {
+      if (updateProduct.fulfilled.match(resultAction)) {
         setSuccess(true);
         // Reset form after successful submission
         setTimeout(() => {
@@ -331,7 +376,7 @@ const AddProductPage: React.FC = () => {
         }, 2000);
       }
     } catch (error) {
-      console.error("Failed to add product:", error);
+      console.error("Failed to update product:", error);
     }
   };
 
@@ -516,7 +561,7 @@ const AddProductPage: React.FC = () => {
                 <FormLabel>SKU</FormLabel>
                 <Input
                   name="sku"
-                  value={productData.sku || ""}
+                  value={productData.sku || undefined}
                   onChange={handleInputChange}
                   placeholder="Product SKU"
                   endDecorator={
@@ -538,7 +583,7 @@ const AddProductPage: React.FC = () => {
             {/* Stock Quantity */}
             <Grid xs={12} sm={6}>
               <FormControl error={!!errors.quantityInStock}>
-                <FormLabel>Initial Stock *</FormLabel>
+                <FormLabel>Current Stock *</FormLabel>
                 <Input
                   name="quantityInStock"
                   type="number"
@@ -571,7 +616,7 @@ const AddProductPage: React.FC = () => {
                 <Input
                   name="minimumStock"
                   type="number"
-                  value={productData.minimumStock || ""}
+                  value={productData.minimumStock || undefined}
                   onChange={handleInputChange}
                   slotProps={{
                     input: {
@@ -683,17 +728,17 @@ const AddProductPage: React.FC = () => {
               variant="soft"
               component="label"
               startDecorator={<AddPhotoAlternateIcon />}
-              disabled={imageFiles.length >= 5 || uploading}
+              disabled={imagesPreviews.length >= 5 || uploading}
               fullWidth
             >
-              {imageFiles.length > 0 ? "Add More Images" : "Upload Images"}
+              {imagesPreviews.length > 0 ? "Add More Images" : "Upload Images"}
               <input
                 type="file"
                 accept="image/*"
                 multiple
                 onChange={handleImageSelect}
                 style={{ display: "none" }}
-                disabled={imageFiles.length >= 5}
+                disabled={imagesPreviews.length >= 5}
               />
             </Button>
 
@@ -739,7 +784,7 @@ const AddProductPage: React.FC = () => {
             <FormLabel>Description</FormLabel>
             <Textarea
               name="description"
-              value={productData.description || ""}
+              value={productData.description || undefined}
               onChange={handleInputChange}
               minRows={4}
               placeholder="Enter product description"
@@ -752,7 +797,7 @@ const AddProductPage: React.FC = () => {
             <Select
               multiple
               placeholder="Select categories"
-              value={productData.categories || []}
+              value={productData.categories || undefined}
               onChange={handleCategoryChange}
               startDecorator={<CategoryIcon />}
               renderValue={(selected) => (
@@ -871,7 +916,7 @@ const AddProductPage: React.FC = () => {
             <FormLabel>SKU</FormLabel>
             <Input
               name="sku"
-              value={productData.sku || ""}
+              value={productData.sku || undefined}
               onChange={handleInputChange}
               placeholder="Product SKU"
               endDecorator={
@@ -885,13 +930,13 @@ const AddProductPage: React.FC = () => {
               }
             />
             <FormHelperText>
-              Leave blank to auto-generate or click icon to generate
+              Current SKU or click icon to generate new one
             </FormHelperText>
           </FormControl>
 
           {/* Stock Quantity */}
           <FormControl error={!!errors.quantityInStock}>
-            <FormLabel>Initial Stock *</FormLabel>
+            <FormLabel>Current Stock *</FormLabel>
             <Input
               name="quantityInStock"
               type="number"
@@ -914,7 +959,7 @@ const AddProductPage: React.FC = () => {
             <Input
               name="minimumStock"
               type="number"
-              value={productData.minimumStock || 0}
+              value={productData.minimumStock || undefined}
               onChange={handleInputChange}
               slotProps={{
                 input: {
@@ -1015,17 +1060,17 @@ const AddProductPage: React.FC = () => {
             variant="soft"
             component="label"
             startDecorator={<AddPhotoAlternateIcon />}
-            disabled={imageFiles.length >= 5 || uploading}
+            disabled={imagesPreviews.length >= 5 || uploading}
             fullWidth
           >
-            {imageFiles.length > 0 ? "Add More Images" : "Upload Images"}
+            {imagesPreviews.length > 0 ? "Add More Images" : "Upload Images"}
             <input
               type="file"
               accept="image/*"
               multiple
               onChange={handleImageSelect}
               style={{ display: "none" }}
-              disabled={imageFiles.length >= 5}
+              disabled={imagesPreviews.length >= 5}
             />
           </Button>
 
@@ -1037,18 +1082,49 @@ const AddProductPage: React.FC = () => {
 
   return (
     <Box sx={{ maxWidth: 1200, mx: "auto", p: { xs: 2, md: 3 } }}>
-      <Button
-        variant="soft"
-        startDecorator={<ArrowBackIcon />}
-        onClick={() => navigate(-1)}
-        sx={{ mb: 3 }}
-      >
-        Back
-      </Button>
+      <Breadcrumbs sx={{ mb: 2 }}>
+        <Link
+          underline="hover"
+          color="neutral"
+          href="/dashboard"
+          startDecorator={<HomeIcon fontSize="small" />}
+        >
+          Dashboard
+        </Link>
+        <Link underline="hover" color="neutral" href="/dashboard/products">
+          Products
+        </Link>
+        <Typography>Edit Product</Typography>
+      </Breadcrumbs>
 
-      <Typography level="h2" sx={{ mb: 3 }}>
-        Add New Product
-      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          alignItems: { xs: "flex-start", sm: "center" },
+          justifyContent: "space-between",
+          mb: 3,
+          gap: 2,
+        }}
+      >
+        <Box>
+          <Button
+            variant="outlined"
+            startDecorator={<ArrowBackIcon />}
+            onClick={() => navigate(-1)}
+            size="sm"
+            sx={{ mb: 1 }}
+          >
+            Back
+          </Button>
+          <Typography level="h2">Edit Product</Typography>
+          {currentProduct && (
+            <Typography level="body-sm" color="neutral">
+              ID: {currentProduct.id} | SKU: {currentProduct.sku || "Not set"}
+            </Typography>
+          )}
+        </Box>
+      </Box>
 
       {error && (
         <Alert color="danger" startDecorator={<ErrorIcon />} sx={{ mb: 3 }}>
@@ -1062,53 +1138,71 @@ const AddProductPage: React.FC = () => {
           startDecorator={<CheckCircleIcon />}
           sx={{ mb: 3 }}
         >
-          Product added successfully! Redirecting...
+          Product updated successfully! Redirecting...
         </Alert>
       )}
 
-      <Card variant="outlined">
-        <CardContent>
-          <form onSubmit={handleSubmit}>
-            {/* Desktop layout (hidden on small screens) */}
-            <Box sx={{ display: { xs: "none", md: "block" } }}>
-              {renderDesktopContent()}
-            </Box>
+      {loading && !currentProduct ? (
+        <Card variant="outlined" sx={{ p: 4 }}>
+          <Stack spacing={2} alignItems="center">
+            <CircularProgress />
+            <Typography>Loading product data...</Typography>
+          </Stack>
+        </Card>
+      ) : (
+        <Card variant="outlined">
+          <CardContent>
+            <form onSubmit={handleSubmit}>
+              {/* Desktop layout (hidden on small screens) */}
+              <Box sx={{ display: { xs: "none", md: "block" } }}>
+                {renderDesktopContent()}
+              </Box>
 
-            {/* Mobile layout (tabbed interface, shown only on small screens) */}
-            <Box sx={{ display: { xs: "block", md: "none" } }}>
-              {renderMobileContent()}
-            </Box>
+              {/* Mobile layout (tabbed interface, shown only on small screens) */}
+              <Box sx={{ display: { xs: "block", md: "none" } }}>
+                {renderMobileContent()}
+              </Box>
 
-            <Divider sx={{ my: 4 }} />
+              <Divider sx={{ my: 4 }} />
 
-            {/* Submit Buttons */}
-            <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
-              <Button
-                variant="soft"
-                color="neutral"
-                onClick={() => navigate("/dashboard/products")}
+              {/* Submit Buttons */}
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  flexDirection: { xs: "column", sm: "row" },
+                  justifyContent: "flex-end",
+                }}
               >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                startDecorator={
-                  loading || uploading ? (
-                    <CircularProgress size="sm" />
-                  ) : (
-                    <SaveIcon />
-                  )
-                }
-                disabled={loading || uploading}
-              >
-                {loading || uploading ? "Saving..." : "Save Product"}
-              </Button>
-            </Box>
-          </form>
-        </CardContent>
-      </Card>
+                <Button
+                  variant="soft"
+                  color="neutral"
+                  onClick={() => navigate("/dashboard/products")}
+                  fullWidth={window.innerWidth < 600}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  startDecorator={
+                    loading || uploading ? (
+                      <CircularProgress size="sm" />
+                    ) : (
+                      <SaveIcon />
+                    )
+                  }
+                  disabled={loading || uploading}
+                  fullWidth={window.innerWidth < 600}
+                >
+                  {loading || uploading ? "Saving..." : "Save Changes"}
+                </Button>
+              </Box>
+            </form>
+          </CardContent>
+        </Card>
+      )}
     </Box>
   );
 };
 
-export default AddProductPage;
+export default EditProductPage;
