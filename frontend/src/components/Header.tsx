@@ -29,14 +29,10 @@ import { logoutUser } from "../redux/slices/authSlice";
 import ColorSchemeToggle from "./ColorSchemeTogle";
 import { useAppDispatch } from "../redux/hooks";
 import { Role } from "../types";
-
-interface Category {
-  id: number;
-  name: string;
-}
+import { CategoryDTO } from "../dto/category.dto";
 
 interface HeaderProps {
-  categories?: Category[];
+  categories?: CategoryDTO[];
 }
 
 export default function Header({ categories }: HeaderProps) {

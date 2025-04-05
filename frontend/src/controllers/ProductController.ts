@@ -1,7 +1,7 @@
 import { BASE_API_URL } from "../types/constants";
 import { BaseController } from "./BaseController";
 import { Product, ProductImage, Category } from "../types";
-import { ProductDTO } from "../dto/ProductDTO";
+import { ProductDTO } from "../dto/product.dto";
 
 // src/controllers/ProductController.ts
 
@@ -63,7 +63,10 @@ class ProductController extends BaseController {
 
   // Add product image
   public async addProductImage(productId: number, imageData: FormData) {
-    return this.setAuthHeader().post<ProductImage>(`/${productId}/images`, imageData);
+    return this.setAuthHeader().post<ProductImage>(
+      `/${productId}/images`,
+      imageData
+    );
   }
 
   // Delete product image
@@ -88,7 +91,10 @@ class ProductController extends BaseController {
 
   // Update product inventory (requires inventory manager role)
   public async updateProductInventory(productId: number, inventoryData: any) {
-    return this.setAuthHeader().put<any>(`/${productId}/inventory`, inventoryData);
+    return this.setAuthHeader().put<any>(
+      `/${productId}/inventory`,
+      inventoryData
+    );
   }
 }
 

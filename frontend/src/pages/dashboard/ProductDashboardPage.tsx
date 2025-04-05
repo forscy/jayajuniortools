@@ -25,7 +25,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { fetchAllProducts } from "../../redux/slices/productSlice";
 import { useAppDispatch } from "../../redux/hooks";
-import { ProductDTO } from "../../dto/ProductDTO";
+import { ProductDTO } from "../../dto/product.dto";
 
 function ProductsTable({ products }: { products: ProductDTO[] }) {
   const navigate = useNavigate();

@@ -2,7 +2,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { ProductState } from "../../types";
 import productController from "../../controllers/ProductController";
-import { ProductDTO } from "../../dto/ProductDTO";
+import { ProductDTO } from "../../dto/product.dto";
 
 // Initial state
 const initialState: ProductState = {

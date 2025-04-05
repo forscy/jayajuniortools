@@ -1,6 +1,6 @@
 import { BaseController, ApiResponse } from "./BaseController";
 import { BASE_API_URL } from "../types/constants";
-import { CategoryDTO } from "../dto/CategoryDTO";
+import { CategoryDTO } from "../dto/category.dto";
 
 class CategoryController extends BaseController {
   constructor() {
@@ -13,9 +13,8 @@ class CategoryController extends BaseController {
    * @param limit Number of items per page (defaults to 10)
    * @returns Promise with categories data and pagination info
    */
-  async getCategories(
-  ): Promise<ApiResponse<CategoryDTO[]>> {
-    return await this.get<CategoryDTO[]>('');
+  async getCategories(): Promise<ApiResponse<CategoryDTO[]>> {
+    return await this.get<CategoryDTO[]>("");
   }
 
   /**
@@ -32,9 +31,11 @@ class CategoryController extends BaseController {
    * @param categoryData Category data to create
    * @returns Promise with created category data
    */
-  async createCategory(categoryData: CategoryDTO): Promise<ApiResponse<CategoryDTO>> {
+  async createCategory(
+    categoryData: CategoryDTO
+  ): Promise<ApiResponse<CategoryDTO>> {
     this.setAuthHeader(); // Set authentication header
-    return await this.post<CategoryDTO>('', categoryData);
+    return await this.post<CategoryDTO>("", categoryData);
   }
 
   /**
@@ -73,10 +74,10 @@ class CategoryController extends BaseController {
     page: number = 1,
     limit: number = 10
   ): Promise<ApiResponse<CategoryDTO[]>> {
-    return await this.get<CategoryDTO[]>('/search', {
+    return await this.get<CategoryDTO[]>("/search", {
       name: searchTerm,
       page,
-      limit
+      limit,
     });
   }
 }

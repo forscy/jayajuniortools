@@ -19,9 +19,9 @@ import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { fetchProducts } from "../redux/slices/productSlice";
 import Header from "../components/Header";
 // Di bagian atas file, tambahkan import untuk gambar default
-import { ProductCard } from "../components/ProductCard";
+import { ProductCard } from "../components/ProductCardNew";
 import Footer from "../components/Footer";
-import { ProductDTO } from "../dto/ProductDTO";
+import { ProductDTO } from "../dto/product.dto";
 
 // Custom Pagination Component with Joy UI
 const CustomPagination: React.FC<{

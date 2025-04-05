@@ -9,15 +9,11 @@ import {
   Stack,
   Button,
 } from "@mui/joy";
-import { ProductDTO, DiscountDTO, ProductStatus } from "../dto/ProductDTO";
+import { ProductDTO, ProductStatus } from "../dto/product.dto";
 import noProductImage from "../assets/images/no-product-image.png";
 import StarIcon from "@mui/icons-material/Star";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
-import {
-  calculateDiscountedPrice,
-  formatRupiah,
-  getAverageRating,
-} from "../utils";
+import { calculateDiscountedPrice, formatRupiah } from "../utils";
 import { useNavigate } from "react-router-dom";
 
 export const ProductCard = ({ product }: { product: ProductDTO }) => {

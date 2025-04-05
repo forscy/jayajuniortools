@@ -19,8 +19,9 @@ import DashboardLayout, {
 import CategoryDashboardPage from "../pages/dashboard/CategoryDashboardPage";
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import UnderMaintenancePage from "../pages/UnderMaintenancePage";
-import DetailProductPage from "../pages/DetailProductPage";
+import DetailProductPage from "../pages/DetailProductPageNew";
 import AddProductPage from "../pages/dashboard/AddProductPage";
+import POSPage from "../pages/TransactionPage";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -44,6 +45,19 @@ const AppRoutes: React.FC = () => {
             <Route path="/profile" element={<UserProfilePage />} />
             <Route path="/cart" element={<PlaceholderPage />} />
           </Route>
+
+          <Route
+            path="/shopkeeper/*"
+            element={
+              <ProtectedRoute allowedRoles={[Role.OWNER, Role.SHOPKEEPER]}>
+                <Routes>
+                  <Route index element={<PlaceholderPage />} />
+                  <Route path="/transaction" element={<POSPage />} />
+                  <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+              </ProtectedRoute>
+            }
+          />
 
           {/* Routes yang memerlukan role spesifik */}
           <Route

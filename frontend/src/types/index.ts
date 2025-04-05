@@ -1,6 +1,6 @@
 // src/types/index.ts
 
-import { ProductDTO } from "../dto/ProductDTO";
+import { ProductDTO } from "../dto/product.dto";
 
 export enum ResponseMessage {
   success = "success",
