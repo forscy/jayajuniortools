@@ -818,8 +818,7 @@ const TransactionPage = () => {
 
   // Calculate totals
   const subtotal = cart.reduce((sum, item) => sum + item.total, 0);
-  const tax = subtotal * 0.11; // Assume 11% tax
-  const total = subtotal + tax;
+  const total = subtotal;
   const change = Math.max(0, amountPaid - total);
 
   // Load data from localStorage on initial render
@@ -1953,16 +1952,6 @@ const TransactionPage = () => {
               <Typography>Subtotal</Typography>
               <Typography>Rp {subtotal.toLocaleString("id-ID")}</Typography>
             </Box>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                mb: 1,
-              }}
-            >
-              <Typography>PPN (11%)</Typography>
-              <Typography>Rp {tax.toLocaleString("id-ID")}</Typography>
-            </Box>
             <Divider sx={{ my: 1.5 }} />
             <Box
               sx={{
@@ -2476,15 +2465,6 @@ const TransactionPage = () => {
               <Typography level="body-sm">Subtotal:</Typography>
               <Typography level="body-sm">
                 Rp {subtotal.toLocaleString("id-ID")}
-              </Typography>
-            </Box>
-
-            <Box
-              sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
-            >
-              <Typography level="body-sm">PPN (11%):</Typography>
-              <Typography level="body-sm">
-                Rp {tax.toLocaleString("id-ID")}
               </Typography>
             </Box>
 

@@ -45,6 +45,7 @@ export const createOrUpdateProduct = async (
 ) => {
   const {
     name,
+    productStatus,
     description,
     retailPrice,
     wholesalePrice,
@@ -91,6 +92,7 @@ export const createOrUpdateProduct = async (
           where: { id },
           data: {
             name,
+            productStatus,
             description,
             retailPrice,
             wholesalePrice,
@@ -152,6 +154,7 @@ export const createOrUpdateProduct = async (
         const newProduct = await tx.product.create({
           data: {
             name,
+            productStatus,
             description,
             retailPrice,
             wholesalePrice,

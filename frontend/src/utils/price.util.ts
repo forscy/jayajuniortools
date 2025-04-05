@@ -1,4 +1,4 @@
-import { DiscountType } from "../types";
+import { DiscountDTO, DiscountType } from "../dto/product.dto";
 
 // Fungsi bantuan
 export const formatRupiah = (price: number): string => {
@@ -12,14 +12,19 @@ export const formatRupiah = (price: number): string => {
 
 export const calculateDiscountedPrice = (
   price: number,
-  discount?: { type: DiscountType; value: number }
+  discount?: DiscountDTO | null
 ): number => {
-  if (!discount) return price;
+  // If no discount is provided, return the original price
+  if (!discount || discount.discountValue <= 0) return price;
 
-  if (discount.type === DiscountType.PERCENTAGE) {
-    return price - (price * discount.value) / 100;
+  switch (discount.discountType) {
+    case DiscountType.PERCENTAGE:
+      return price - (price * discount.discountValue) / 100;
+    case DiscountType.FIXED:
+      return price - discount.discountValue;
+    default:
+      return price; // fallback in case of an unexpected discount type
   }
-  return price - discount.value;
 };
 
 export const getAverageRating = (reviews: { rating: number }[]): number => {

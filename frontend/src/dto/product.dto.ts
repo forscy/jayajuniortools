@@ -63,3 +63,16 @@ export interface ProductDTO {
   discount?: DiscountDTO | null;
   brand?: BrandDTO | null;
 }
+
+export interface ProductFilters {
+  page: number;
+  pageSize: number;
+  search?: string;
+  status?: string;
+  category?: string;
+  stockLevel?: string;
+  priceMin?: number | null;
+  priceMax?: number | null;
+  sortBy: string;
+  sortOrder: 'asc' | 'desc';
+}

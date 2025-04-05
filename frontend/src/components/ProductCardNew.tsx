@@ -9,11 +9,10 @@ import {
   AspectRatio,
   Chip,
   Stack,
-  Badge,
 } from "@mui/joy";
 
 import { ProductDTO, ProductStatus } from "../dto/product.dto";
-import { calculateDiscountedPrice } from "../utils";
+import { calculateDiscountedPrice } from "../utils/price.util";
 import noProductImage from "../assets/images/no-product-image.png";
 
 // Icons
@@ -25,34 +24,14 @@ import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import VerifiedIcon from "@mui/icons-material/Verified";
-
-export const StarRating = ({ rating }: { rating: any }) => {
-  const fullStars = Math.floor(rating);
-  const hasHalfStar = rating % 1 >= 0.5;
-
-  return (
-    <Box sx={{ display: "flex", alignItems: "center", color: "warning.500" }}>
-      {Array(5)
-        .fill(0)
-        .map((_, index) => {
-          if (index < fullStars) {
-            return <StarIcon key={index} fontSize="small" />;
-          } else if (index === fullStars && hasHalfStar) {
-            return <StarHalfIcon key={index} fontSize="small" />;
-          } else {
-            return <StarOutlineIcon key={index} fontSize="small" />;
-          }
-        })}
-    </Box>
-  );
-};
+import { StarRating } from "./StarRating";
 
 export const ProductCard = ({
   product,
-  onClick,
+  onClickEye,
 }: {
   product: ProductDTO;
-  onClick?: () => void;
+  onClickEye?: () => void;
 }) => {
   // Calculate the discounted price correctly
   const hasDiscount =
@@ -106,7 +85,6 @@ export const ProductCard = ({
         overflow: "hidden",
         cursor: "pointer",
       }}
-      onClick={onClick}
     >
       {/* Label for discount */}
       {hasDiscount && (
@@ -204,7 +182,7 @@ export const ProductCard = ({
       )}
 
       {/* Product image */}
-      <AspectRatio ratio="1" objectFit="cover">
+      <AspectRatio ratio="1" objectFit="cover" onClick={onClickEye}>
         {!product.imageUrls || product.imageUrls.length === 0 ? (
           <img src={noProductImage} alt="default" loading="lazy" />
         ) : (
@@ -235,6 +213,7 @@ export const ProductCard = ({
           size="sm"
           color="primary"
           aria-label="View product details"
+          onClick={onClickEye}
         >
           <VisibilityIcon fontSize="small" />
         </IconButton>
@@ -346,12 +325,12 @@ export const ProductCard = ({
           </Box>
 
           {/* Wholesale price indication */}
-          {product.wholesalePrice && product.minWholesaleQty && (
+          {/* {product.wholesalePrice && product.minWholesaleQty && (
             <Typography level="body-xs" sx={{ color: "success.600" }}>
               Grosir: Rp {product.wholesalePrice.toLocaleString("id-ID")} (min.{" "}
               {product.minWholesaleQty})
             </Typography>
-          )}
+          )} */}
 
           {/* Action buttons */}
           <Box sx={{ display: "flex", gap: 1, mt: 0.5 }}>

@@ -21,12 +21,14 @@ import {
   Alert,
   Stack,
   Input,
+  Skeleton,
 } from "@mui/joy";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { DiscountType, ProductDTO, ProductStatus } from "../dto/product.dto";
 
 // Icons
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
@@ -45,123 +47,11 @@ import AddIcon from "@mui/icons-material/Add";
 import CheckIcon from "@mui/icons-material/Check";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import HomeIcon from "@mui/icons-material/Home";
-
-// Mock data - would normally come from API
-const productDetail: ProductDTO = {
-  id: 123,
-  name: "Sepatu Olahraga Premium Ultra-Comfort Edisi Terbatas",
-  description:
-    "Sepatu olahraga premium dengan teknologi terbaru untuk kenyamanan maksimal saat berolahraga. Dirancang dengan bahan berkualitas tinggi dan teknologi penyerap getaran untuk melindungi kaki Anda selama aktivitas fisik intens. Cocok untuk jogging, gym, dan berbagai aktivitas olahraga lainnya.",
-  retailPrice: 499000,
-  wholesalePrice: 399000,
-  minWholesaleQty: 5,
-  sku: "SPT-PRE-001",
-  productStatus: ProductStatus.AVAILABLE,
-  quantityInStock: 25,
-  minimumStock: 5,
-  categories: ["Sepatu", "Olahraga", "Premium"],
-  imageUrls: [
-    "https://images.unsplash.com/photo-1542291026-7eec264c27ff",
-    "https://images.unsplash.com/photo-1608231387042-66d1773070a5",
-    "https://images.unsplash.com/photo-1605348532760-6753d2c43329",
-    "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519",
-  ],
-  discount: {
-    name: "Diskon Musim Panas",
-    description: "Diskon spesial untuk koleksi musim panas",
-    discountType: DiscountType.PERCENTAGE,
-    discountValue: 15,
-    minPurchase: 1,
-    startDate: new Date("2025-04-01"),
-    endDate: new Date("2025-04-30"),
-    isActive: true,
-  },
-  brand: {
-    name: "SportElite",
-    description: "Brand premium untuk perlengkapan olahraga",
-    logoUrl: "https://via.placeholder.com/150",
-  },
-};
-
-// Reviews data
-const reviews = [
-  {
-    id: 1,
-    user: {
-      name: "Budi Santoso",
-      avatar: "https://i.pravatar.cc/150?img=1",
-    },
-    date: "2025-03-20",
-    rating: 5,
-    comment:
-      "Sepatu yang sangat nyaman dipakai, bahannya juga berkualitas. Sudah dipakai untuk lari 5K dan tidak ada keluhan sama sekali. Ukurannya juga pas sesuai dengan deskripsi.",
-    helpful: 12,
-  },
-  {
-    id: 2,
-    user: {
-      name: "Siti Rahayu",
-      avatar: "https://i.pravatar.cc/150?img=5",
-    },
-    date: "2025-03-15",
-    rating: 4,
-    comment:
-      "Sepatu ini sangat baik untuk harganya. Desainnya keren dan bahan berkualitas. Satu-satunya masalah kecil adalah perlu waktu beberapa hari untuk break-in, tapi setelah itu sangat nyaman.",
-    helpful: 8,
-  },
-  {
-    id: 3,
-    user: {
-      name: "Andi Wijaya",
-      avatar: "https://i.pravatar.cc/150?img=3",
-    },
-    date: "2025-03-10",
-    rating: 5,
-    comment:
-      "Ini adalah sepatu kedua yang saya beli dari merek ini dan saya tidak pernah kecewa. Sangat cocok untuk latihan di gym dan desainnya mendapat banyak pujian.",
-    helpful: 15,
-  },
-];
-
-// Related products
-const relatedProducts = [
-  {
-    id: 456,
-    name: "Sepatu Lari Ultralight",
-    price: 429000,
-    discount: 10,
-    image: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa",
-    rating: 4.6,
-    reviewCount: 86,
-  },
-  {
-    id: 789,
-    name: "Sepatu Fitness Premium",
-    price: 479000,
-    discount: 0,
-    image: "https://images.unsplash.com/photo-1605408499391-6368c628ef42",
-    rating: 4.7,
-    reviewCount: 91,
-  },
-  {
-    id: 101,
-    name: "Sepatu Trail Adventure",
-    price: 599000,
-    discount: 20,
-    image: "https://images.unsplash.com/photo-1539185441755-769473a23570",
-    rating: 4.8,
-    reviewCount: 124,
-  },
-  {
-    id: 112,
-    name: "Sepatu Basket Pro",
-    price: 549000,
-    discount: 5,
-    image: "https://images.unsplash.com/photo-1556906781-9a412961c28c",
-    rating: 4.9,
-    reviewCount: 152,
-  },
-];
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { useNavigate, useParams } from "react-router-dom";
+import { fetchProductById } from "../redux/slices/productSlice";
+import { ProductCard } from "../components/ProductCardNew";
+import { calculateDiscountedPrice } from "../utils/price.util";
 
 const StarRating = ({ rating }: { rating: number }) => {
   const fullStars = Math.floor(rating);
@@ -200,7 +90,7 @@ const ProductImageGallery = ({ images }: { images: string[] }) => {
           borderColor: "divider",
         }}
       >
-        <img src={mainImage} alt={productDetail.name} />
+        <img src={mainImage} alt={"product"} />
       </AspectRatio>
 
       <Grid container spacing={1}>
@@ -235,9 +125,13 @@ const ProductInfo = ({ product }: { product: ProductDTO }) => {
   const [quantity, setQuantity] = useState(1);
   const [wishlist, setWishlist] = useState(false);
 
-  const discountedPrice = product.discount
-    ? product.retailPrice * (1 - product.discount.discountValue / 100)
-    : product.retailPrice;
+  const discountedPrice = calculateDiscountedPrice(
+    product.retailPrice,
+    product.discount
+  );
+  // product.discount !== null
+  //   ? product.retailPrice * (1 - product.discount.discountValue / 100)
+  //   : product.retailPrice;
 
   const isWholesale = quantity >= (product.minWholesaleQty || 5);
   const finalPrice = isWholesale
@@ -838,74 +732,7 @@ const ProductReviews = ({ reviews }: { reviews: any[] }) => {
   );
 };
 
-// Helper component for rendering related products
-const RelatedProductCard = ({ product }: { product: any }) => {
-  return (
-    <Card
-      variant="outlined"
-      sx={{
-        height: "100%",
-        cursor: "pointer",
-        transition: "transform 0.2s, box-shadow 0.2s",
-        "&:hover": {
-          transform: {
-            xs: "none",
-            sm: "translateY(-4px)",
-          },
-          boxShadow: "md",
-        },
-      }}
-    >
-      <AspectRatio ratio="1" sx={{ position: "relative" }}>
-        <img src={product.image} alt={product.name} />
-        {product.discount > 0 && (
-          <Chip
-            size="sm"
-            color="danger"
-            variant="solid"
-            sx={{
-              position: "absolute",
-              top: 8,
-              right: 8,
-            }}
-          >
-            {product.discount}% OFF
-          </Chip>
-        )}
-      </AspectRatio>
-
-      <CardContent>
-        <Typography level="title-sm" sx={{ mb: 0.5 }}>
-          {product.name}
-        </Typography>
-
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 1 }}>
-          <StarRating rating={product.rating} />
-          <Typography level="body-xs" sx={{ color: "text.tertiary" }}>
-            ({product.reviewCount})
-          </Typography>
-        </Box>
-
-        <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-          <Typography level="body-lg" fontWeight="bold">
-            {formatPrice(product.price * (1 - product.discount / 100))}
-          </Typography>
-
-          {product.discount > 0 && (
-            <Typography
-              level="body-sm"
-              sx={{ textDecoration: "line-through", color: "text.tertiary" }}
-            >
-              {formatPrice(product.price)}
-            </Typography>
-          )}
-        </Box>
-      </CardContent>
-    </Card>
-  );
-};
-
-const RelatedProducts = ({ products }: { products: any[] }) => {
+const RelatedProducts = ({ products }: { products: ProductDTO[] }) => {
   return (
     <Box sx={{ mt: 4 }}>
       <Typography level="h4" sx={{ mb: 2 }}>
@@ -915,7 +742,7 @@ const RelatedProducts = ({ products }: { products: any[] }) => {
       <Grid container spacing={2}>
         {products.map((product) => (
           <Grid key={product.id} xs={6} sm={6} md={3}>
-            <RelatedProductCard product={product} />
+            <ProductCard product={product}/>
           </Grid>
         ))}
       </Grid>
@@ -924,7 +751,55 @@ const RelatedProducts = ({ products }: { products: any[] }) => {
 };
 
 const DetailProductPageNew = () => {
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState(0);
+  const dispatch = useAppDispatch();
+  const { product, loading, error } = useAppSelector((state) => state.product);
+
+  useEffect(() => {
+    if (id) {
+      console.info(id);
+      dispatch(fetchProductById(parseInt(id)));
+    }
+  }, [dispatch, id]);
+  const handleGoBack = () => {
+    navigate(-1);
+  };
+  if (loading) {
+    return (
+      <Box sx={{ maxWidth: 1200, mx: "auto", p: 3 }}>
+        <Skeleton variant="rectangular" width="100%" height={400} />
+        <Skeleton variant="text" sx={{ mt: 2 }} />
+        <Skeleton variant="text" />
+        <Grid container spacing={2} sx={{ mt: 2 }}>
+          <Grid xs={12} md={6}>
+            <Skeleton variant="rectangular" height={300} />
+          </Grid>
+          <Grid xs={12} md={6}>
+            <Skeleton variant="rectangular" height={300} />
+          </Grid>
+        </Grid>
+      </Box>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <Box sx={{ maxWidth: 1200, mx: "auto", p: 3 }}>
+        <Typography level="h4" color="danger">
+          {error || "Product not found"}
+        </Typography>
+        <Button
+          onClick={handleGoBack}
+          startDecorator={<ArrowBackIcon />}
+          sx={{ mt: 2 }}
+        >
+          Back
+        </Button>
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -964,17 +839,17 @@ const DetailProductPageNew = () => {
             Olahraga
           </Link>
           <Typography color="primary" fontWeight="bold" fontSize="inherit">
-            {productDetail.name.substring(0, 20)}...
+            {product?.name.substring(0, 20)}...
           </Typography>
         </Breadcrumbs>
 
         <Grid container spacing={{ xs: 2, md: 4 }} sx={{ mb: 4 }}>
           <Grid xs={12} md={5} lg={5}>
-            <ProductImageGallery images={productDetail.imageUrls || []} />
+            <ProductImageGallery images={product?.imageUrls || []} />
           </Grid>
 
           <Grid xs={12} md={7} lg={7}>
-            <ProductInfo product={productDetail} />
+            {product && <ProductInfo product={product} />}
           </Grid>
         </Grid>
 
@@ -998,10 +873,10 @@ const DetailProductPageNew = () => {
               <Tab sx={{ fontWeight: 600 }}>Pengiriman</Tab>
             </TabList>
             <TabPanel value={0} sx={{ p: 3 }}>
-              <ProductDescription product={productDetail} />
+              <ProductDescription product={product!} />
             </TabPanel>
             <TabPanel value={1} sx={{ p: 3 }}>
-              <ProductReviews reviews={reviews} />
+              {/* <ProductReviews reviews={reviews} /> */}
             </TabPanel>
             <TabPanel value={2} sx={{ p: 3 }}>
               <Typography level="h4" sx={{ mb: 2 }}>
@@ -1145,7 +1020,7 @@ const DetailProductPageNew = () => {
           </Tabs>
         </Card>
 
-        <RelatedProducts products={relatedProducts} />
+        {/* <RelatedProducts products={relatedProducts} /> */}
       </Container>
 
       <Footer />

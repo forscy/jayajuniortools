@@ -1,7 +1,7 @@
-import { BASE_API_URL } from "../types/constants";
+import { BASE_API_URL } from "../constants/url.constant";
 import { BaseController } from "./BaseController";
-import { Product, ProductImage, Category } from "../types";
-import { ProductDTO } from "../dto/product.dto";
+import { ProductDTO, ProductFilters } from "../dto/product.dto";
+import { CategoryDTO } from "../dto/category.dto";
 
 // src/controllers/ProductController.ts
 
@@ -24,15 +24,7 @@ class ProductController extends BaseController {
   }
 
   // Get all products with optional pagination and filters
-  public async getAllProducts(params?: {
-    page?: number;
-    pageSize?: number;
-    search?: string;
-    category?: number;
-    minPrice?: number;
-    maxPrice?: number;
-    sort?: string;
-  }) {
+  public async getAllProducts(params?: ProductFilters) {
     return this.setAuthHeader().get<ProductDTO[]>("/all", params);
   }
 
@@ -47,26 +39,18 @@ class ProductController extends BaseController {
   }
 
   // Update a product (requires admin/inventory manager role)
-  public async updateProduct(id: number, productData: Partial<Product>) {
-    return this.setAuthHeader().put<Product>(`/${id}`, productData);
+  public async updateProduct(id: number, productData: Partial<ProductDTO>) {
+    return this.setAuthHeader().put<ProductDTO>(`/${id}`, productData);
   }
 
   // Delete a product (requires admin/inventory manager role)
   public async deleteProduct(id: number) {
-    return this.setAuthHeader().delete<ProductDTO>(`/${id}`);
+    return this.setAuthHeader().delete<ProductDTO>(`/soft/${id}`);
   }
 
   // Get product categories
   public async getCategories() {
-    return this.setAuthHeader().get<Category[]>("/categories");
-  }
-
-  // Add product image
-  public async addProductImage(productId: number, imageData: FormData) {
-    return this.setAuthHeader().post<ProductImage>(
-      `/${productId}/images`,
-      imageData
-    );
+    return this.setAuthHeader().get<CategoryDTO[]>("/categories");
   }
 
   // Delete product image

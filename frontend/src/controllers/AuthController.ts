@@ -1,7 +1,10 @@
-import { BASE_API_URL } from "../types/constants";
+import { BASE_API_URL } from "../constants/url.constant";
 import { BaseController } from "./BaseController";
-import { User } from "../types";
-import { getTokenInLocalStorage, removeTokenInLocalStorage } from "../utils/localStorageUtil";
+import { UserDTO } from "../dto/user.dto";
+import {
+  getTokenInLocalStorage,
+  removeTokenInLocalStorage,
+} from "../utils/localStorageUtil";
 
 class AuthController extends BaseController {
   constructor() {
@@ -15,7 +18,7 @@ class AuthController extends BaseController {
     } else {
       return this.setAuthHeader().get<{
         isAuthenticated: boolean;
-        user: User;
+        user: UserDTO;
         token: string;
       }>("/is-authenticated");
     }
@@ -23,7 +26,7 @@ class AuthController extends BaseController {
 
   // User login
   public async signIn(credentials: { email: string; password: string }) {
-    return this.post<{ token: string; user: User }>("/signin", credentials);
+    return this.post<{ token: string; user: UserDTO }>("/signin", credentials);
   }
 
   // User registration
@@ -32,12 +35,12 @@ class AuthController extends BaseController {
     email: string;
     password: string;
   }) {
-    return this.post<{ token: string; user: User }>("/signup", userData);
+    return this.post<{ token: string; user: UserDTO }>("/signup", userData);
   }
 
   // Get current user profile
   public async getMe() {
-    return this.setAuthHeader().get<User>("/me");
+    return this.setAuthHeader().get<UserDTO>("/me");
   }
 
   // Logout user (if server-side logout is needed)

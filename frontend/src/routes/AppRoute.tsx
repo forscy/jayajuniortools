@@ -1,7 +1,7 @@
 // src/routes/AppRoutes.tsx
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Role } from "../types/index";
+import { Role } from "../dto/user.dto";
 import SignInPage from "../pages/SignInPage";
 import ProtectedRoute from "./ProtectedRoute";
 import HomePage from "../pages/HomePage";
@@ -19,9 +19,10 @@ import DashboardLayout, {
 import CategoryDashboardPage from "../pages/dashboard/CategoryDashboardPage";
 import DashboardPage from "../pages/dashboard/DashboardPage";
 import UnderMaintenancePage from "../pages/UnderMaintenancePage";
-import DetailProductPage from "../pages/DetailProductPageNew";
 import AddProductPage from "../pages/dashboard/AddProductPage";
 import POSPage from "../pages/TransactionPage";
+import EditProductPage from "../pages/dashboard/EditProductPage";
+import DetailProductPageNew from "../pages/DetailProductPageNew";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -38,7 +39,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
           <Route path="/products" element={<ProductsPage />} />
-          <Route path="/products/:id" element={<DetailProductPage />} />
+          <Route path="/products/:id" element={<DetailProductPageNew />} />
 
           {/* Routes yang memerlukan autentikasi */}
           <Route element={<ProtectedRoute />}>
@@ -123,6 +124,15 @@ const AppRoutes: React.FC = () => {
                       <DashboardLayout
                         title="Add Products Page"
                         children={<AddProductPage />}
+                      />
+                    }
+                  />
+                  <Route
+                    path="/products/:productId/edit"
+                    element={
+                      <DashboardLayout
+                        title="Edit Products Page"
+                        children={<EditProductPage />}
                       />
                     }
                   />
