@@ -48,15 +48,7 @@ export const fetchProductById = createAsyncThunk(
 export const fetchProducts = createAsyncThunk(
   "product/fetchProducts",
   async (
-    params: {
-      page?: number;
-      pageSize?: number;
-      search?: string;
-      category?: number;
-      minPrice?: number;
-      maxPrice?: number;
-      sort?: string;
-    } = {},
+    params: ProductFilters | any,
     { rejectWithValue }
   ) => {
     try {

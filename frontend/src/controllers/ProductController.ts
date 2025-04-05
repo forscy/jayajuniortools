@@ -11,15 +11,7 @@ class ProductController extends BaseController {
   }
 
   // Get all products with optional pagination and filters
-  public async getProducts(params?: {
-    page?: number;
-    pageSize?: number;
-    search?: string;
-    category?: number;
-    minPrice?: number;
-    maxPrice?: number;
-    sort?: string;
-  }) {
+  public async getProducts(params?: ProductFilters) {
     return this.setAuthHeader().get<ProductDTO[]>("", params);
   }
 

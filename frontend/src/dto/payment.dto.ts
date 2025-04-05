@@ -1,7 +1,13 @@
+export enum PaymentStatus {
+  PENDING = "PENDING", // Pembayaran belum diproses
+  COMPLETED = "COMPLETED", // Pembayaran telah berhasil
+  FAILED = "FAILED", // Pembayaran gagal
+}
+
 export enum PaymentMethod {
-  BANK = 'BANK',
-  E_WALLET = 'E_WALLET',
-  CASH = 'CASH',
+  BANK = "BANK",
+  E_WALLET = "E_WALLET",
+  CASH = "CASH",
 }
 
 export interface PaymentDTO {
@@ -12,7 +18,7 @@ export interface PaymentDTO {
 
   paymentDate: Date;
   paymentStatus: string;
-  
+
   createdAt: string;
   updatedAt: string;
 
@@ -26,4 +32,9 @@ export interface PaymentReceiverDTO {
   provider: string;
   accountNumber: string;
   accountHolderName: string;
+}
+
+export interface PaymentCreateDTO {
+  orderId: number;
+  receiverId: number;
 }

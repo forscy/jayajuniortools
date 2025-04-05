@@ -21,3 +21,11 @@ export interface UserDTO {
   updatedAt: string;
   role: Role;
 }
+
+export interface UserCreateDTO {
+  name: string;
+  email?: string | null;
+  password?: string | null;
+  status: UserStatus;
+  role: Role;
+}
