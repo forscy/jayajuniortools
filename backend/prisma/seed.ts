@@ -2,6 +2,7 @@ import {
   Brand,
   Category,
   DiscountType,
+  PaymentMethod,
   PrismaClient,
   ProductStatus,
   Role,
@@ -12,23 +13,72 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 // Delete all existing data in the database
-const deleteAllData = async () => {
-  await prisma.review.deleteMany();
-  await prisma.wishlist.deleteMany();
-  await prisma.productImage.deleteMany();
-  await prisma.productCategory.deleteMany();
-  await prisma.discount.deleteMany();
-  await prisma.product.deleteMany();
-  await prisma.brand.deleteMany();
-  await prisma.category.deleteMany();
-  await prisma.user.deleteMany(); // Delete all users
-  console.log("Semua data dihapus!");
+export const deleteAllData = async () => {
+  try {
+    console.log("Menghapus semua data...");
+    await prisma.review.deleteMany();
+    await prisma.orderItem.deleteMany();
+    await prisma.payment.deleteMany();
+    await prisma.order.deleteMany();
+    await prisma.paymentReceiver.deleteMany();
+    await prisma.wishlist.deleteMany();
+    await prisma.productImage.deleteMany();
+    await prisma.productCategory.deleteMany();
+    await prisma.discount.deleteMany();
+    await prisma.product.deleteMany();
+    await prisma.brand.deleteMany();
+    await prisma.category.deleteMany();
+    await prisma.user.deleteMany(); // Delete all users
+    console.log("Semua data dihapus!");
+  } catch (error) {
+    console.error("Gagal menghapus data:", error);
+    throw new Error("Gagal menghapus data!");
+  }
+  try {
+    await resetAutoIncrement("review");
+    await resetAutoIncrement("orderItem");
+    await resetAutoIncrement("order");
+    await resetAutoIncrement("paymentReceiver");
+    await resetAutoIncrement("wishlist");
+    await resetAutoIncrement("productImage");
+    await resetAutoIncrement("productCategory");
+    await resetAutoIncrement("discount");
+    await resetAutoIncrement("product");
+    await resetAutoIncrement("brand");
+    await resetAutoIncrement("category");
+    await resetAutoIncrement("user");
+    console.log("Reset auto increment setiap table!");
+  } catch (error) {
+    console.error("Gagal mereset auto increment!");
+    throw new Error("Gagal mereset auto increment!");
+  }
+};
+
+// Fungsi untuk mereset auto-increment
+// Fungsi untuk mereset auto-increment pada tabel
+export const resetAutoIncrement = async (tableName: string) => {
+  try {
+    // Menggunakan backticks untuk escape nama tabel order
+    await prisma.$executeRawUnsafe(
+      `ALTER TABLE \`${tableName}\` AUTO_INCREMENT = 1`
+    );
+    console.log(`Auto-increment reset berhasil pada tabel ${tableName}`);
+  } catch (error) {
+    console.error(
+      `Error saat mereset auto-increment pada tabel ${tableName}:`,
+      error
+    );
+  }
 };
 
 const createUsers = async () => {
   const hashPassword = await bcrypt.hash("securepassword", 10); // Meng-hash password
 
   const users = [
+    {
+      name: "Pembeli Umum",
+      email: "pembeli.umum@forscy.my.id",
+    },
     {
       name: "owner",
       email: "owner@gmail.com",
@@ -305,7 +355,7 @@ const createProducts = async () => {
       sku: "BOR-PRO-13MM",
       brandId: 1,
       locationName: "Main Warehouse",
-      quantityInStock: 25,
+      quantityInStock: 15,
       minimumStock: 5,
     },
     {
@@ -333,7 +383,7 @@ const createProducts = async () => {
       sku: "GRG-CIR-7",
       brandId: 1,
       locationName: "Main Warehouse",
-      quantityInStock: 50,
+      quantityInStock: 15,
       minimumStock: 10,
     },
     {
@@ -346,7 +396,7 @@ const createProducts = async () => {
       minWholesaleQty: 10,
       sku: "KCM-SFT-CLR",
       locationName: "Main Warehouse",
-      quantityInStock: 30,
+      quantityInStock: 15,
       minimumStock: 5,
     },
     {
@@ -358,7 +408,7 @@ const createProducts = async () => {
       minWholesaleQty: 3,
       sku: "KNC-PAS-SET",
       locationName: "Main Warehouse",
-      quantityInStock: 100,
+      quantityInStock: 15,
       minimumStock: 20,
     },
     {
@@ -371,7 +421,7 @@ const createProducts = async () => {
       minWholesaleQty: 5,
       sku: "MTR-DIG-5M",
       locationName: "Main Warehouse",
-      quantityInStock: 40,
+      quantityInStock: 15,
       minimumStock: 8,
       productStatus: ProductStatus.COMMING_SOON,
     },
@@ -385,7 +435,7 @@ const createProducts = async () => {
       minWholesaleQty: 10,
       sku: "HLM-SFT-KNG",
       locationName: "Main Warehouse",
-      quantityInStock: 35,
+      quantityInStock: 15,
       minimumStock: 7,
       productStatus: ProductStatus.COMMING_SOON,
     },
@@ -399,7 +449,7 @@ const createProducts = async () => {
       minWholesaleQty: 5,
       sku: "PLU-KRT-500",
       locationName: "Main Warehouse",
-      quantityInStock: 20,
+      quantityInStock: 15,
       minimumStock: 5,
       productStatus: ProductStatus.DELETED,
     },
@@ -591,35 +641,35 @@ const createReviews = async () => {
     {
       id: 1,
       productId: 1,
-      email: "buyer1@gmail.com",
+      userId: 1,
       rating: 5,
       comment: "Mesin bor yang sangat bagus dan kuat. Sangat merekomendasikan!",
     },
     {
       id: 2,
       productId: 1,
-      email: "buyer1@gmail.com",
+      userId: 1,
       rating: 4,
       comment: "Kualitas bagus, tapi agak berat untuk penggunaan lama.",
     },
     {
       id: 3,
       productId: 2,
-      email: "buyer1@gmail.com",
+      userId: 1,
       rating: 5,
       comment: "Set obeng yang sangat lengkap dan kualitasnya bagus.",
     },
     {
       id: 4,
       productId: 3,
-      email: "buyer2@gmail.com",
+      userId: 2,
       rating: 4,
       comment: "Gergaji yang bagus, potongannya rapi dan presisi.",
     },
     {
       id: 5,
       productId: 5,
-      email: "buyer3@gmail.com",
+      userId: 3,
       rating: 5,
       comment:
         "Set kunci pas yang lengkap, material kokoh dan nyaman digenggam.",
@@ -629,7 +679,7 @@ const createReviews = async () => {
   for (const review of reviews) {
     const existing = await prisma.review.findFirst({
       where: {
-        email: review.email,
+        userId: review.userId,
         productId: review.productId,
       },
     });
@@ -644,13 +694,80 @@ const createReviews = async () => {
   console.log("Seeder untuk review berhasil dijalankan!");
 };
 
+// Create payment Receiver
+const createPaymentReceiver = async () => {
+  const paymentReceivers = [
+    {
+      id: 1,
+      method: PaymentMethod.CASH,
+      provider: "OWNER",
+      accountNumber: "OWNER",
+      accountHolderName: "Jaya Junior",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: 2,
+      method: PaymentMethod.E_WALLET,
+      provider: "Shopee Pay",
+      accountNumber: "085123456789",
+      accountHolderName: "Jaya Junior",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: 3,
+      method: PaymentMethod.E_WALLET,
+      provider: "DANA",
+      accountNumber: "085123456789",
+      accountHolderName: "Jaya Junior",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: 4,
+      method: PaymentMethod.BANK,
+      provider: "BNI",
+      accountNumber: "085123456789",
+      accountHolderName: "Jaya Junior",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: 5,
+      method: PaymentMethod.CASH,
+      provider: "Kasir 1",
+      accountNumber: "085123456781",
+      accountHolderName: "Ethena",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  ];
+
+  // Insert payment receivers to database if not exists
+  for (const receiver of paymentReceivers) {
+    const existingReceiver = await prisma.paymentReceiver.findUnique({
+      where: { id: receiver.id },
+    });
+
+    if (!existingReceiver) {
+      await prisma.paymentReceiver.create({
+        data: receiver,
+      });
+    }
+  }
+
+  console.log("Seeder untuk payment receiver berhasil dijalankan!");
+};
+
 const runSeeder = async () => {
   try {
-    await deleteAllData();
+    await deleteAllData(); // Hapus semua data sebelum seeding
     await createUsers();
     await createCategories();
     await createBrands();
     await createProducts();
+    await createPaymentReceiver();
     // await createWishlists();
     await createReviews();
     console.log("Semua seeder berhasil dijalankan!");
@@ -662,3 +779,4 @@ const runSeeder = async () => {
 };
 
 runSeeder();
+// deleteAllData();

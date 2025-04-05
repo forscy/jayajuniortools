@@ -14,14 +14,22 @@ interface IResponse {
   pagination?: Pagination | undefined;
 }
 
-export const sendResponse = (
-  res: any,
-  statusCode: number,
-  status: "success" | "error",
-  message: string,
-  data?: any,
-  pagination?: any
-) => {
+interface SendResponseParams {
+  res: any;
+  statusCode: number;
+  status: "success" | "error";
+  message: string;
+  data?: any;
+  pagination?: any;
+}
+export const sendResponse = ({
+  res,
+  statusCode,
+  status,
+  message,
+  data,
+  pagination,
+}: SendResponseParams) => {
   const response: IResponse = {
     status,
     message,

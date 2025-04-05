@@ -6,9 +6,15 @@ import { Role } from "@prisma/client";
 
 // Check if user is authenticated
 export const isAuthenticated = async (req: Request, res: Response) => {
-  return sendResponse(res, 200, "success", "User is authenticated", {
-    isAuthenticated: true,
-    user: (req as any).user,
+  return sendResponse({
+    res,
+    statusCode: 200,
+    status: "success",
+    message: "User is authenticated",
+    data: {
+      isAuthenticated: true,
+      user: (req as any).user,
+    },
   });
 };
 
@@ -17,12 +23,23 @@ export const signUp = async (req: Request, res: Response) => {
 
   try {
     const result = await authService.signUpService(name, email, password);
-    return sendResponse(res, 201, "success", result.message, {
-      token: result.token,
-      user: result.user,
+    return sendResponse({
+      res,
+      statusCode: 201,
+      status: "success",
+      message: result.message,
+      data: {
+        token: result.token,
+        user: result.user,
+      },
     });
   } catch (error: any) {
-    return sendResponse(res, 400, "error", error.message);
+    return sendResponse({
+      res,
+      statusCode: 400,
+      status: "error",
+      message: error.message,
+    });
   }
 };
 
@@ -31,12 +48,23 @@ export const signIn = async (req: Request, res: Response) => {
 
   try {
     const result = await authService.signInService(email, password);
-    return sendResponse(res, 200, "success", result.message, {
-      token: result.token,
-      user: result.user,
+    return sendResponse({
+      res,
+      statusCode: 200,
+      status: "success",
+      message: result.message,
+      data: {
+        token: result.token,
+        user: result.user,
+      },
     });
   } catch (error: any) {
-    return sendResponse(res, 400, "error", error.message);
+    return sendResponse({
+      res,
+      statusCode: 400,
+      status: "error",
+      message: error.message,
+    });
   }
 };
 
@@ -45,18 +73,32 @@ export const changePassword = async (req: Request, res: Response) => {
   const email = (req as any).user?.email; // Dapatkan email dari token (setelah proses autentikasi)
 
   if (!email) {
-    return sendResponse(res, 400, "error", "User not authenticated");
+    return sendResponse({
+      res,
+      statusCode: 400,
+      status: "error",
+      message: "User not authenticated",
+    });
   }
-
   try {
     const result = await authService.changePasswordService(
       email,
       oldPassword,
       newPassword
     );
-    return sendResponse(res, 200, "success", result.message);
+    return sendResponse({
+      res,
+      statusCode: 200,
+      status: "success",
+      message: result.message,
+    });
   } catch (error: any) {
-    return sendResponse(res, 400, "error", error.message);
+    return sendResponse({
+      res,
+      statusCode: 400,
+      status: "error",
+      message: error.message,
+    });
   }
 };
 
@@ -65,12 +107,12 @@ export const createAccount = async (req: Request, res: Response) => {
 
   // Validasi role
   if (role !== Role.SHOPKEEPER && role !== Role.INVENTORY_MANAGER) {
-    return sendResponse(
+    return sendResponse({
       res,
-      400,
-      "error",
-      "Role must be either Shopkeeper or Inventory Manager"
-    );
+      statusCode: 400,
+      status: "error",
+      message: "Role must be either Shopkeeper or Inventory Manager",
+    });
   }
 
   try {
@@ -80,17 +122,23 @@ export const createAccount = async (req: Request, res: Response) => {
       password,
       role,
     });
-    return sendResponse(res, 201, "success", result.message, {
-      email: result.email,
-      role: result.role,
+    return sendResponse({
+      res,
+      statusCode: 201,
+      status: "success",
+      message: result.message,
+      data: {
+        email: result.email,
+        role: result.role,
+      },
     });
   } catch (error: any) {
-    return sendResponse(
+    return sendResponse({
       res,
-      500,
-      "error",
-      error.message || "Failed to create user"
-    );
+      statusCode: 500,
+      status: "error",
+      message: error.message || "Failed to create user",
+    });
   }
 };
 
@@ -99,11 +147,22 @@ export const suspendAccount = async (req: Request, res: Response) => {
 
   try {
     const result = await authService.suspendAccountService({ email });
-    return sendResponse(res, 200, "success", result.message, {
-      email: result.email,
+    return sendResponse({
+      res,
+      statusCode: 200,
+      status: "success",
+      message: result.message,
+      data: {
+        email: result.email,
+      },
     });
   } catch (error: any) {
-    return sendResponse(res, 400, "error", error.message);
+    return sendResponse({
+      res,
+      statusCode: 400,
+      status: "error",
+      message: error.message,
+    });
   }
 };
 
@@ -112,11 +171,22 @@ export const deleteAccount = async (req: Request, res: Response) => {
 
   try {
     const result = await authService.deleteAccountService({ email });
-    return sendResponse(res, 200, "success", result.message, {
-      email: result.email,
+    return sendResponse({
+      res,
+      statusCode: 200,
+      status: "success",
+      message: result.message,
+      data: {
+        email: result.email,
+      },
     });
   } catch (error: any) {
-    return sendResponse(res, 400, "error", error.message);
+    return sendResponse({
+      res,
+      statusCode: 400,
+      status: "error",
+      message: error.message,
+    });
   }
 };
 
@@ -131,10 +201,21 @@ export const editAccount = async (req: Request, res: Response) => {
       status,
     });
 
-    return sendResponse(res, 200, "success", result.message, {
-      email: result.email,
+    return sendResponse({
+      res,
+      statusCode: 200,
+      status: "success",
+      message: result.message,
+      data: {
+        email: result.email,
+      },
     });
   } catch (error: any) {
-    return sendResponse(res, 400, "error", error.message);
+    return sendResponse({
+      res,
+      statusCode: 400,
+      status: "error",
+      message: error.message,
+    });
   }
 };

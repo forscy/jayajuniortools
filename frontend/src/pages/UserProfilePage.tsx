@@ -35,16 +35,9 @@ import {
 } from "@mui/icons-material";
 import { useTheme } from "@mui/joy/styles";
 import { useMediaQuery } from "@mui/material";
-import {
-  User,
-  Order,
-  Review,
-  Wishlist,
-  UserStatus,
-  OrderStatus,
-  Role,
-  Product,
-} from "../types";
+import { Role, UserDTO, UserStatus } from "../dto/user.dto";
+import { OrderDTO } from "../dto/order.dto";
+import { ReviewDTO } from "../dto/product.dto";
 
 // Utility functions
 const formatDate = (dateStr: string) => {
@@ -63,11 +56,11 @@ const getStatusColor = (status: string) => {
     [UserStatus.ACTIVE]: "success",
     [UserStatus.INACTIVE]: "neutral",
     [UserStatus.SUSPENDED]: "danger",
-    [OrderStatus.PENDING]: "neutral",
-    [OrderStatus.PROCESSED]: "primary",
-    [OrderStatus.SHIPPED]: "warning",
-    [OrderStatus.COMPLETED]: "success",
-    [OrderStatus.CANCELLED]: "danger",
+    // [OrderStatus.PENDING]: "neutral",
+    // [OrderStatus.PROCESSED]: "primary",
+    // [OrderStatus.SHIPPED]: "warning",
+    // [OrderStatus.COMPLETED]: "success",
+    // [OrderStatus.CANCELLED]: "danger",
   };
   return statusMap[status] || "neutral";
 };
@@ -235,7 +228,7 @@ const OrdersPanel = ({ orders, formatDate, isMobile }: any) => (
             </tr>
           </thead>
           <tbody>
-            {orders.map((order: Order) => (
+            {orders.map((order: OrderDTO) => (
               <tr key={order.id}>
                 <td>#{order.id.toString().padStart(5, "0")}</td>
                 <td>{formatDate(order.createdAt)}</td>
@@ -300,126 +293,18 @@ const ReviewsPanel = ({ reviews, formatDate }: any) => {
       <Typography level="h4" sx={{ mb: 2 }}>
         My Reviews
       </Typography>
-      {reviews.length > 0 ? (
-        <Grid container spacing={2}>
-          {reviews.map((review: Review) => (
-            <Grid xs={12} key={review.id}>
-              <Card variant="outlined" sx={{ mb: 2 }}>
-                <CardContent>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                      mb: 1,
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <Typography level="title-md">
-                      {review.product?.name}
-                    </Typography>
-                    <Typography level="body-xs">
-                      {formatDate(review.createdAt)}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ display: "flex", mb: 2 }}>
-                    {renderStars(review.rating)}
-                  </Box>
-                  {review.comment && (
-                    <Typography level="body-md">"{review.comment}"</Typography>
-                  )}
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      ) : (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-          <Typography level="body-lg">No reviews yet</Typography>
-        </Box>
-      )}
+      <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+        <Typography level="body-lg">No reviews yet</Typography>
+      </Box>
     </>
   );
 };
 
-// New component for wishlist tab
-const WishlistPanel = ({ wishlist }: { wishlist: Wishlist[] }) => (
-  <>
-    <Typography level="h4" sx={{ mb: 2 }}>
-      My Wishlist
-    </Typography>
-    {wishlist.length > 0 ? (
-      <Grid container spacing={2}>
-        {wishlist.map((item: Wishlist) => (
-          <Grid xs={12} sm={6} lg={4} key={item.id}>
-            <Card variant="outlined" sx={{ height: "100%" }}>
-              <Box sx={{ position: "relative" }}>
-                <AspectRatio ratio="1">
-                  <img
-                    src={
-                      item.product?.images?.[0]?.url ||
-                      "https://via.placeholder.com/200"
-                    }
-                    alt={item.product?.name}
-                    style={{ objectFit: "cover" }}
-                  />
-                </AspectRatio>
-                <IconButton
-                  size="sm"
-                  variant="soft"
-                  color="danger"
-                  sx={{ position: "absolute", top: 8, right: 8 }}
-                >
-                  <DeleteOutline />
-                </IconButton>
-              </Box>
-              <CardContent>
-                <Typography level="title-sm" noWrap>
-                  {item.product?.name}
-                </Typography>
-                <Typography level="body-sm" sx={{ mt: 0.5, mb: 1.5 }}>
-                  Rp {item.product?.retailPrice.toLocaleString("id-ID")}
-                </Typography>
-                <Button
-                  size="sm"
-                  variant="solid"
-                  color="primary"
-                  fullWidth
-                  startDecorator={<ShoppingCart />}
-                >
-                  Add to Cart
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-    ) : (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          py: 4,
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 2,
-        }}
-      >
-        <Typography level="body-lg">Your wishlist is empty</Typography>
-        <Button startDecorator={<ShoppingBag />} variant="soft" color="primary">
-          Browse Products
-        </Button>
-      </Box>
-    )}
-  </>
-);
-
 const UserProfilePage: React.FC = () => {
   const [tabIndex, setTabIndex] = useState(0);
-  const [user, setUser] = useState<User | null>(null);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [wishlist, setWishlist] = useState<Wishlist[]>([]);
+  const [user, setUser] = useState<UserDTO | null>(null);
+  const [orders, setOrders] = useState<OrderDTO[]>([]);
+  const [reviews, setReviews] = useState<ReviewDTO[]>([]);
   const [notifications, setNotifications] = useState<number>(3);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -440,106 +325,6 @@ const UserProfilePage: React.FC = () => {
         updatedAt: "2023-01-15T00:00:00Z",
         role: Role.BUYER,
       });
-
-      setOrders([
-        {
-          id: 1,
-          status: OrderStatus.PROCESSED,
-          createdAt: "2023-05-10T00:00:00Z",
-          totalAmount: 150000,
-        },
-        {
-          id: 2,
-          status: OrderStatus.SHIPPED,
-          createdAt: "2023-06-15T00:00:00Z",
-          totalAmount: 89500,
-        },
-        {
-          id: 3,
-          status: OrderStatus.COMPLETED,
-          createdAt: "2023-07-20T00:00:00Z",
-          totalAmount: 210750,
-        },
-      ]);
-
-      // Mock product data
-      const mockProducts: Product[] = [
-        {
-          id: 101,
-          name: "Power Drill",
-          description: "High-power professional drill",
-          retailPrice: 450000,
-          wholesalePrice: 400000,
-          minWholesaleQty: 5,
-          sku: "DRILL-001",
-          createdAt: "2023-01-01T00:00:00Z",
-          updatedAt: "2023-01-01T00:00:00Z",
-          inventoryId: 1,
-          images: [{ id: 1, productId: 101, url: "/images/power-drill.jpg" }],
-        },
-        {
-          id: 102,
-          name: "Wrench Set",
-          description: "Professional wrench set with various sizes",
-          retailPrice: 350000,
-          sku: "WRNCH-001",
-          createdAt: "2023-01-02T00:00:00Z",
-          updatedAt: "2023-01-02T00:00:00Z",
-          inventoryId: 2,
-          images: [{ id: 2, productId: 102, url: "/images/wrench-set.jpg" }],
-        },
-        {
-          id: 103,
-          name: "Premium Hammer",
-          description: "Durable premium hammer",
-          retailPrice: 125000,
-          sku: "HMMR-001",
-          createdAt: "2023-01-03T00:00:00Z",
-          updatedAt: "2023-01-03T00:00:00Z",
-          inventoryId: 3,
-          images: [{ id: 3, productId: 103, url: "/images/hammer.jpg" }],
-        },
-      ];
-
-      setReviews([
-        {
-          id: 1,
-          productId: 101,
-          userId: 1,
-          rating: 5,
-          comment: "Great power tool, very durable",
-          createdAt: "2023-03-15T00:00:00Z",
-          updatedAt: "2023-03-15T00:00:00Z",
-          product: mockProducts[0],
-        },
-        {
-          id: 2,
-          productId: 102,
-          userId: 1,
-          rating: 4,
-          comment: "Good quality for the price",
-          createdAt: "2023-04-22T00:00:00Z",
-          updatedAt: "2023-04-22T00:00:00Z",
-          product: mockProducts[1],
-        },
-      ]);
-
-      setWishlist([
-        {
-          id: 1,
-          email: "john.doe@example.com",
-          productId: 103,
-          createdAt: "2023-06-15T00:00:00Z",
-          product: mockProducts[2],
-        },
-        {
-          id: 2,
-          email: "john.doe@example.com",
-          productId: 101,
-          createdAt: "2023-07-10T00:00:00Z",
-          product: mockProducts[0],
-        },
-      ]);
 
       setLoading(false);
     }, 800);
@@ -629,7 +414,6 @@ const UserProfilePage: React.FC = () => {
                   user={user}
                   orders={orders}
                   reviews={reviews}
-                  wishlist={wishlist}
                 />
               </TabPanel>
 
@@ -643,10 +427,6 @@ const UserProfilePage: React.FC = () => {
 
               <TabPanel value={2}>
                 <ReviewsPanel reviews={reviews} formatDate={formatDate} />
-              </TabPanel>
-
-              <TabPanel value={3}>
-                <WishlistPanel wishlist={wishlist} />
               </TabPanel>
             </Tabs>
           </Card>

@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { addProduct } from "../../redux/slices/productSlice";
 import { fetchCategories } from "../../redux/slices/categorySlice";
 import imageController from "../../controllers/ImageController";
+import { ProductDTO, ProductStatus } from "../../dto/product.dto";
 
 import {
   Box,
@@ -28,6 +29,11 @@ import {
   Alert,
   CircularProgress,
   LinearProgress,
+  Tab,
+  TabList,
+  TabPanel,
+  Tabs,
+  Tooltip,
 } from "@mui/joy";
 
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -39,6 +45,10 @@ import InventoryIcon from "@mui/icons-material/Inventory";
 import QrCodeIcon from "@mui/icons-material/QrCode";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
+import CategoryIcon from "@mui/icons-material/Category";
+// import DescriptionIcon from "@mui/icons-material/Description";
+import ImageIcon from "@mui/icons-material/Image";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
 const AddProductPage: React.FC = () => {
   const navigate = useNavigate();
@@ -47,7 +57,7 @@ const AddProductPage: React.FC = () => {
   const { categories } = useAppSelector((state) => state.category);
 
   // Form state
-  const [productData, setProductData] = useState({
+  const [productData, setProductData] = useState<Partial<ProductDTO>>({
     name: "",
     description: "",
     retailPrice: 0,
@@ -56,8 +66,9 @@ const AddProductPage: React.FC = () => {
     sku: "",
     quantityInStock: 0,
     minimumStock: 5,
-    categories: [] as string[], // Changed from number[] to string[] to match API
-    imageUrls: [] as string[], // Changed from images to imageUrls to match API
+    categories: [],
+    imageUrls: [],
+    productStatus: ProductStatus.AVAILABLE,
   });
 
   // Form validation
@@ -77,6 +88,9 @@ const AddProductPage: React.FC = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  // Active tab for mobile view
+  const [activeTab, setActiveTab] = useState(0);
+
   // Fetch categories on component mount
   useEffect(() => {
     dispatch(fetchCategories());
@@ -87,13 +101,13 @@ const AddProductPage: React.FC = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setProductData({
-      ...productData,
+    setProductData((prev) => ({
+      ...prev,
       [name]:
         name.includes("Price") || name.includes("Qty") || name.includes("Stock")
-          ? parseFloat(value) || 0
+          ? parseFloat(value) || null
           : value,
-    });
+    }));
 
     // Clear error when user types
     if (name in errors) {
@@ -107,12 +121,23 @@ const AddProductPage: React.FC = () => {
   // Handle category selection
   const handleCategoryChange = (
     event: React.SyntheticEvent | null,
-    newValue: Array<string> | null
+    newValue: string[] | null
   ) => {
-    setProductData({
-      ...productData,
+    setProductData((prev) => ({
+      ...prev,
       categories: newValue || [],
-    });
+    }));
+  };
+
+  // Handle status change
+  const handleStatusChange = (
+    event: React.SyntheticEvent | null,
+    newValue: string | null
+  ) => {
+    setProductData((prev) => ({
+      ...prev,
+      productStatus: (newValue as ProductStatus) || ProductStatus.AVAILABLE,
+    }));
   };
 
   // Handle image file selection
@@ -128,6 +153,15 @@ const AddProductPage: React.FC = () => {
 
     setUploadError(null);
 
+    // Check file sizes
+    const oversizedFiles = newFiles.filter(
+      (file) => file.size > 5 * 1024 * 1024
+    );
+    if (oversizedFiles.length > 0) {
+      setUploadError("Some files exceed the maximum size of 5MB");
+      return;
+    }
+
     // Store files for later upload
     setImageFiles([...imageFiles, ...newFiles]);
 
@@ -139,9 +173,9 @@ const AddProductPage: React.FC = () => {
   // Remove image
   const handleRemoveImage = (index: number) => {
     // If the image was already uploaded, we'll need to update productData.imageUrls
-    const wasUploaded = index < productData.imageUrls.length;
+    const wasUploaded = index < (productData.imageUrls?.length || 0);
 
-    if (wasUploaded) {
+    if (wasUploaded && productData.imageUrls) {
       // Remove from the uploaded URLs
       const newImageUrls = [...productData.imageUrls];
       newImageUrls.splice(index, 1);
@@ -216,23 +250,40 @@ const AddProductPage: React.FC = () => {
 
     let isValid = true;
 
-    if (!productData.name.trim()) {
+    if (!productData.name?.trim()) {
       newErrors.name = "Product name is required";
       isValid = false;
     }
 
-    if (productData.retailPrice <= 0) {
+    if (!productData.retailPrice || productData.retailPrice <= 0) {
       newErrors.retailPrice = "Price must be greater than 0";
       isValid = false;
     }
 
-    if (productData.quantityInStock < 0) {
+    if (
+      productData.quantityInStock === undefined ||
+      productData.quantityInStock < 0
+    ) {
       newErrors.quantityInStock = "Stock cannot be negative";
       isValid = false;
     }
 
     setErrors(newErrors);
     return isValid;
+  };
+
+  // Generate a random SKU
+  const generateSKU = () => {
+    const prefix = "PRD";
+    const randomPart = Math.floor(Math.random() * 10000)
+      .toString()
+      .padStart(4, "0");
+    const sku = `${prefix}-${randomPart}`;
+
+    setProductData({
+      ...productData,
+      sku,
+    });
   };
 
   // Submit form
@@ -242,7 +293,7 @@ const AddProductPage: React.FC = () => {
     if (!validateForm()) return;
 
     try {
-      let imageUrls: string[] = [...productData.imageUrls]; // Start with any already uploaded images
+      let imageUrls: string[] = [...(productData.imageUrls || [])];
       // Upload any new images
       if (imageFiles.length > 0) {
         const newUrls = await uploadImages();
@@ -252,20 +303,20 @@ const AddProductPage: React.FC = () => {
       }
 
       // Create the product data to match the API's expected format
-      const productToAdd = {
-        name: productData.name,
-        description: productData.description,
-        retailPrice: productData.retailPrice,
-        wholesalePrice: productData.wholesalePrice || undefined,
-        minWholesaleQty: productData.minWholesaleQty || undefined,
-        sku: productData.sku || undefined,
-        quantityInStock: productData.quantityInStock,
-        minimumStock: productData.minimumStock,
-        categories:
-          productData.categories.length > 0
-            ? productData.categories
-            : undefined,
-        imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
+      const productToAdd: ProductDTO = {
+        name: productData.name!,
+        description: productData.description || null,
+        retailPrice: productData.retailPrice!,
+        wholesalePrice: productData.wholesalePrice || null,
+        minWholesaleQty: productData.minWholesaleQty || null,
+        sku: productData.sku || null,
+        quantityInStock: productData.quantityInStock!,
+        minimumStock: productData.minimumStock || null,
+        productStatus: productData.productStatus || ProductStatus.AVAILABLE,
+        categories: productData.categories?.length
+          ? productData.categories
+          : null,
+        imageUrls: imageUrls.length > 0 ? imageUrls : null,
       };
 
       console.info("Adding product:", productToAdd);
@@ -284,19 +335,705 @@ const AddProductPage: React.FC = () => {
     }
   };
 
-  // Generate a random SKU (for demo purposes)
-  const generateSKU = () => {
-    const prefix = "PRD";
-    const randomPart = Math.floor(Math.random() * 10000)
-      .toString()
-      .padStart(4, "0");
-    const sku = `${prefix}-${randomPart}`;
+  // Content for desktop view
+  const renderDesktopContent = () => (
+    <Grid container spacing={3}>
+      {/* Left Column - Basic Info */}
+      <Grid xs={12} md={8}>
+        <Stack spacing={3}>
+          {/* Product Name */}
+          <FormControl error={!!errors.name}>
+            <FormLabel>Product Name *</FormLabel>
+            <Input
+              name="name"
+              value={productData.name}
+              onChange={handleInputChange}
+              placeholder="Enter product name"
+            />
+            {errors.name && <FormHelperText>{errors.name}</FormHelperText>}
+          </FormControl>
 
-    setProductData({
-      ...productData,
-      sku,
-    });
-  };
+          {/* Description */}
+          <FormControl>
+            <FormLabel>Description</FormLabel>
+            <Textarea
+              name="description"
+              value={productData.description || undefined}
+              onChange={handleInputChange}
+              minRows={4}
+              placeholder="Enter product description"
+            />
+          </FormControl>
+
+          {/* Categories and Status */}
+          <Grid container spacing={2}>
+            <Grid xs={12} md={6}>
+              <FormControl>
+                <FormLabel>Categories</FormLabel>
+                <Select
+                  multiple
+                  placeholder="Select categories"
+                  value={productData.categories || undefined}
+                  onChange={handleCategoryChange}
+                  startDecorator={<CategoryIcon />}
+                  renderValue={(selected) => (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: "0.25rem",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      {selected.map((categoryName) => (
+                        <Chip variant="soft" key={categoryName.value}>
+                          {categoryName.value}
+                        </Chip>
+                      ))}
+                    </Box>
+                  )}
+                >
+                  {categories.map((category) => (
+                    <Option key={category.id} value={category.name}>
+                      {category.name}
+                    </Option>
+                  ))}
+                </Select>
+                <FormHelperText>Select one or more categories</FormHelperText>
+              </FormControl>
+            </Grid>
+            <Grid xs={12} md={6}>
+              <FormControl>
+                <FormLabel>Product Status</FormLabel>
+                <Select
+                  value={productData.productStatus}
+                  onChange={handleStatusChange}
+                >
+                  {Object.values(ProductStatus).map((status) => (
+                    <Option key={status} value={status}>
+                      {status.replace(/_/g, " ")}
+                    </Option>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+
+          <Divider />
+
+          {/* Price Information */}
+          <Typography level="title-md" startDecorator={<AttachMoneyIcon />}>
+            Pricing Information
+          </Typography>
+
+          <Grid container spacing={2}>
+            {/* Retail Price */}
+            <Grid xs={12} sm={6}>
+              <FormControl error={!!errors.retailPrice}>
+                <FormLabel>Retail Price (Rp) *</FormLabel>
+                <Input
+                  name="retailPrice"
+                  type="number"
+                  value={productData.retailPrice}
+                  onChange={handleInputChange}
+                  slotProps={{
+                    input: {
+                      min: 0,
+                      step: 1000,
+                    },
+                  }}
+                  startDecorator="Rp"
+                />
+                {errors.retailPrice && (
+                  <FormHelperText>{errors.retailPrice}</FormHelperText>
+                )}
+              </FormControl>
+            </Grid>
+
+            {/* Wholesale Price */}
+            <Grid xs={12} sm={6}>
+              <FormControl>
+                <FormLabel>
+                  Wholesale Price (Rp)
+                  <Tooltip title="Price for bulk purchases" placement="top">
+                    <HelpOutlineIcon sx={{ ml: 0.5, fontSize: 18 }} />
+                  </Tooltip>
+                </FormLabel>
+                <Input
+                  name="wholesalePrice"
+                  type="number"
+                  value={productData.wholesalePrice || undefined}
+                  onChange={handleInputChange}
+                  slotProps={{
+                    input: {
+                      min: 0,
+                      step: 1000,
+                    },
+                  }}
+                  startDecorator="Rp"
+                />
+                <FormHelperText>Leave at 0 if not applicable</FormHelperText>
+              </FormControl>
+            </Grid>
+
+            {/* Min Wholesale Quantity */}
+            <Grid xs={12} sm={6}>
+              <FormControl>
+                <FormLabel>
+                  Min. Wholesale Quantity
+                  <Tooltip
+                    title="Minimum quantity for wholesale pricing"
+                    placement="top"
+                  >
+                    <HelpOutlineIcon sx={{ ml: 0.5, fontSize: 18 }} />
+                  </Tooltip>
+                </FormLabel>
+                <Input
+                  name="minWholesaleQty"
+                  type="number"
+                  value={productData.minWholesaleQty || undefined}
+                  onChange={handleInputChange}
+                  slotProps={{
+                    input: {
+                      min: 0,
+                    },
+                  }}
+                />
+              </FormControl>
+            </Grid>
+          </Grid>
+
+          <Divider />
+
+          {/* Inventory Information */}
+          <Typography level="title-md" startDecorator={<InventoryIcon />}>
+            Inventory Information
+          </Typography>
+
+          <Grid container spacing={2}>
+            {/* SKU */}
+            <Grid xs={12} sm={6}>
+              <FormControl>
+                <FormLabel>SKU</FormLabel>
+                <Input
+                  name="sku"
+                  value={productData.sku || ""}
+                  onChange={handleInputChange}
+                  placeholder="Product SKU"
+                  endDecorator={
+                    <IconButton
+                      variant="plain"
+                      onClick={generateSKU}
+                      title="Generate SKU"
+                    >
+                      <QrCodeIcon />
+                    </IconButton>
+                  }
+                />
+                <FormHelperText>
+                  Leave blank to auto-generate or click icon to generate
+                </FormHelperText>
+              </FormControl>
+            </Grid>
+
+            {/* Stock Quantity */}
+            <Grid xs={12} sm={6}>
+              <FormControl error={!!errors.quantityInStock}>
+                <FormLabel>Initial Stock *</FormLabel>
+                <Input
+                  name="quantityInStock"
+                  type="number"
+                  value={productData.quantityInStock}
+                  onChange={handleInputChange}
+                  slotProps={{
+                    input: {
+                      min: 0,
+                    },
+                  }}
+                />
+                {errors.quantityInStock && (
+                  <FormHelperText>{errors.quantityInStock}</FormHelperText>
+                )}
+              </FormControl>
+            </Grid>
+
+            {/* Minimum Stock */}
+            <Grid xs={12} sm={6}>
+              <FormControl>
+                <FormLabel>
+                  Minimum Stock Level
+                  <Tooltip
+                    title="Alert threshold for low stock"
+                    placement="top"
+                  >
+                    <HelpOutlineIcon sx={{ ml: 0.5, fontSize: 18 }} />
+                  </Tooltip>
+                </FormLabel>
+                <Input
+                  name="minimumStock"
+                  type="number"
+                  value={productData.minimumStock || ""}
+                  onChange={handleInputChange}
+                  slotProps={{
+                    input: {
+                      min: 0,
+                    },
+                  }}
+                />
+                <FormHelperText>Stock level at which to reorder</FormHelperText>
+              </FormControl>
+            </Grid>
+          </Grid>
+        </Stack>
+      </Grid>
+
+      {/* Right Column - Images */}
+      <Grid xs={12} md={4}>
+        <Card variant="outlined">
+          <Box sx={{ p: 2 }}>
+            <Typography level="title-md" startDecorator={<ImageIcon />}>
+              Product Images
+            </Typography>
+            <Typography level="body-sm">
+              Upload images of your product (max 5)
+            </Typography>
+          </Box>
+
+          <Divider />
+
+          <Stack spacing={2} sx={{ p: 2 }}>
+            {/* Upload progress */}
+            {uploading && (
+              <Box sx={{ width: "100%" }}>
+                <Typography level="body-sm" sx={{ mb: 1 }}>
+                  Uploading images: {uploadProgress}%
+                </Typography>
+                <LinearProgress
+                  determinate
+                  value={uploadProgress}
+                  sx={{ my: 1 }}
+                />
+              </Box>
+            )}
+
+            {/* Upload error */}
+            {uploadError && (
+              <Alert
+                color="danger"
+                startDecorator={<ErrorIcon />}
+                sx={{ mt: 1, mb: 2 }}
+                size="sm"
+              >
+                {uploadError}
+              </Alert>
+            )}
+
+            {/* Image previews */}
+            {imagesPreviews.length > 0 ? (
+              <Stack spacing={2}>
+                {imagesPreviews.map((preview, index) => (
+                  <Card key={index} variant="outlined">
+                    <AspectRatio ratio="1" objectFit="contain">
+                      <img
+                        src={preview}
+                        alt={`Product preview ${index + 1}`}
+                        loading="lazy"
+                      />
+                    </AspectRatio>
+                    <Box
+                      sx={{
+                        p: 1,
+                        display: "flex",
+                        justifyContent: "flex-end",
+                      }}
+                    >
+                      <IconButton
+                        color="danger"
+                        variant="plain"
+                        onClick={() => handleRemoveImage(index)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
+                  </Card>
+                ))}
+              </Stack>
+            ) : (
+              <Sheet
+                variant="outlined"
+                sx={{
+                  borderRadius: "md",
+                  p: 3,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 2,
+                }}
+              >
+                <AddPhotoAlternateIcon
+                  sx={{ fontSize: 48, color: "neutral.500" }}
+                />
+                <Typography level="body-sm" textAlign="center">
+                  Drag and drop images here or click to browse
+                </Typography>
+              </Sheet>
+            )}
+
+            {/* Image upload button */}
+            <Button
+              variant="soft"
+              component="label"
+              startDecorator={<AddPhotoAlternateIcon />}
+              disabled={imageFiles.length >= 5 || uploading}
+              fullWidth
+            >
+              {imageFiles.length > 0 ? "Add More Images" : "Upload Images"}
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageSelect}
+                style={{ display: "none" }}
+                disabled={imageFiles.length >= 5}
+              />
+            </Button>
+
+            <FormHelperText>
+              Supported formats: JPG, PNG. Max size: 5MB per image.
+            </FormHelperText>
+          </Stack>
+        </Card>
+      </Grid>
+    </Grid>
+  );
+
+  // Content for mobile view (tabbed interface)
+  const renderMobileContent = () => (
+    <Tabs
+      value={activeTab}
+      onChange={(event, value) => setActiveTab(value as number)}
+      sx={{ display: { md: "none" } }}
+    >
+      <TabList>
+        <Tab>Basic Info</Tab>
+        <Tab>Pricing</Tab>
+        <Tab>Inventory</Tab>
+        <Tab>Images</Tab>
+      </TabList>
+
+      <TabPanel value={0}>
+        <Stack spacing={3}>
+          {/* Product Name */}
+          <FormControl error={!!errors.name}>
+            <FormLabel>Product Name *</FormLabel>
+            <Input
+              name="name"
+              value={productData.name}
+              onChange={handleInputChange}
+              placeholder="Enter product name"
+            />
+            {errors.name && <FormHelperText>{errors.name}</FormHelperText>}
+          </FormControl>
+
+          {/* Description */}
+          <FormControl>
+            <FormLabel>Description</FormLabel>
+            <Textarea
+              name="description"
+              value={productData.description || ""}
+              onChange={handleInputChange}
+              minRows={4}
+              placeholder="Enter product description"
+            />
+          </FormControl>
+
+          {/* Categories */}
+          <FormControl>
+            <FormLabel>Categories</FormLabel>
+            <Select
+              multiple
+              placeholder="Select categories"
+              value={productData.categories || []}
+              onChange={handleCategoryChange}
+              startDecorator={<CategoryIcon />}
+              renderValue={(selected) => (
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: "0.25rem",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  {selected.map((categoryName) => (
+                    <Chip variant="soft" key={categoryName.value}>
+                      {categoryName.value}
+                    </Chip>
+                  ))}
+                </Box>
+              )}
+            >
+              {categories.map((category) => (
+                <Option key={category.id} value={category.name}>
+                  {category.name}
+                </Option>
+              ))}
+            </Select>
+          </FormControl>
+
+          {/* Product Status */}
+          <FormControl>
+            <FormLabel>Product Status</FormLabel>
+            <Select
+              value={productData.productStatus}
+              onChange={handleStatusChange}
+            >
+              {Object.values(ProductStatus).map((status) => (
+                <Option key={status} value={status}>
+                  {status.replace(/_/g, " ")}
+                </Option>
+              ))}
+            </Select>
+          </FormControl>
+        </Stack>
+      </TabPanel>
+
+      <TabPanel value={1}>
+        <Stack spacing={3}>
+          <Typography level="title-md" startDecorator={<AttachMoneyIcon />}>
+            Pricing Information
+          </Typography>
+
+          {/* Retail Price */}
+          <FormControl error={!!errors.retailPrice}>
+            <FormLabel>Retail Price (Rp) *</FormLabel>
+            <Input
+              name="retailPrice"
+              type="number"
+              value={productData.retailPrice}
+              onChange={handleInputChange}
+              slotProps={{
+                input: {
+                  min: 0,
+                  step: 1000,
+                },
+              }}
+              startDecorator="Rp"
+            />
+            {errors.retailPrice && (
+              <FormHelperText>{errors.retailPrice}</FormHelperText>
+            )}
+          </FormControl>
+
+          {/* Wholesale Price */}
+          <FormControl>
+            <FormLabel>Wholesale Price (Rp)</FormLabel>
+            <Input
+              name="wholesalePrice"
+              type="number"
+              value={productData.wholesalePrice || undefined}
+              onChange={handleInputChange}
+              slotProps={{
+                input: {
+                  min: 0,
+                  step: 1000,
+                },
+              }}
+              startDecorator="Rp"
+            />
+            <FormHelperText>Leave at 0 if not applicable</FormHelperText>
+          </FormControl>
+
+          {/* Min Wholesale Quantity */}
+          <FormControl>
+            <FormLabel>Min. Wholesale Quantity</FormLabel>
+            <Input
+              name="minWholesaleQty"
+              type="number"
+              value={productData.minWholesaleQty || undefined}
+              onChange={handleInputChange}
+              slotProps={{
+                input: {
+                  min: 0,
+                },
+              }}
+            />
+          </FormControl>
+        </Stack>
+      </TabPanel>
+
+      <TabPanel value={2}>
+        <Stack spacing={3}>
+          <Typography level="title-md" startDecorator={<InventoryIcon />}>
+            Inventory Information
+          </Typography>
+
+          {/* SKU */}
+          <FormControl>
+            <FormLabel>SKU</FormLabel>
+            <Input
+              name="sku"
+              value={productData.sku || ""}
+              onChange={handleInputChange}
+              placeholder="Product SKU"
+              endDecorator={
+                <IconButton
+                  variant="plain"
+                  onClick={generateSKU}
+                  title="Generate SKU"
+                >
+                  <QrCodeIcon />
+                </IconButton>
+              }
+            />
+            <FormHelperText>
+              Leave blank to auto-generate or click icon to generate
+            </FormHelperText>
+          </FormControl>
+
+          {/* Stock Quantity */}
+          <FormControl error={!!errors.quantityInStock}>
+            <FormLabel>Initial Stock *</FormLabel>
+            <Input
+              name="quantityInStock"
+              type="number"
+              value={productData.quantityInStock}
+              onChange={handleInputChange}
+              slotProps={{
+                input: {
+                  min: 0,
+                },
+              }}
+            />
+            {errors.quantityInStock && (
+              <FormHelperText>{errors.quantityInStock}</FormHelperText>
+            )}
+          </FormControl>
+
+          {/* Minimum Stock */}
+          <FormControl>
+            <FormLabel>Minimum Stock Level</FormLabel>
+            <Input
+              name="minimumStock"
+              type="number"
+              value={productData.minimumStock || 0}
+              onChange={handleInputChange}
+              slotProps={{
+                input: {
+                  min: 0,
+                },
+              }}
+            />
+            <FormHelperText>Stock level at which to reorder</FormHelperText>
+          </FormControl>
+        </Stack>
+      </TabPanel>
+
+      <TabPanel value={3}>
+        <Stack spacing={2}>
+          <Typography level="title-md" startDecorator={<ImageIcon />}>
+            Product Images
+          </Typography>
+
+          {/* Upload progress */}
+          {uploading && (
+            <Box sx={{ width: "100%" }}>
+              <Typography level="body-sm" sx={{ mb: 1 }}>
+                Uploading images: {uploadProgress}%
+              </Typography>
+              <LinearProgress
+                determinate
+                value={uploadProgress}
+                sx={{ my: 1 }}
+              />
+            </Box>
+          )}
+
+          {/* Upload error */}
+          {uploadError && (
+            <Alert
+              color="danger"
+              startDecorator={<ErrorIcon />}
+              sx={{ mt: 1, mb: 2 }}
+              size="sm"
+            >
+              {uploadError}
+            </Alert>
+          )}
+
+          {/* Image previews */}
+          {imagesPreviews.length > 0 ? (
+            <Stack spacing={2}>
+              {imagesPreviews.map((preview, index) => (
+                <Card key={index} variant="outlined">
+                  <AspectRatio ratio="1" objectFit="contain">
+                    <img
+                      src={preview}
+                      alt={`Product preview ${index + 1}`}
+                      loading="lazy"
+                    />
+                  </AspectRatio>
+                  <Box
+                    sx={{
+                      p: 1,
+                      display: "flex",
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <IconButton
+                      color="danger"
+                      variant="plain"
+                      onClick={() => handleRemoveImage(index)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
+                </Card>
+              ))}
+            </Stack>
+          ) : (
+            <Sheet
+              variant="outlined"
+              sx={{
+                borderRadius: "md",
+                p: 3,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 2,
+              }}
+            >
+              <AddPhotoAlternateIcon
+                sx={{ fontSize: 48, color: "neutral.500" }}
+              />
+              <Typography level="body-sm" textAlign="center">
+                Tap to upload product images
+              </Typography>
+            </Sheet>
+          )}
+
+          {/* Image upload button */}
+          <Button
+            variant="soft"
+            component="label"
+            startDecorator={<AddPhotoAlternateIcon />}
+            disabled={imageFiles.length >= 5 || uploading}
+            fullWidth
+          >
+            {imageFiles.length > 0 ? "Add More Images" : "Upload Images"}
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageSelect}
+              style={{ display: "none" }}
+              disabled={imageFiles.length >= 5}
+            />
+          </Button>
+
+          <FormHelperText>Max 5 images, 5MB each</FormHelperText>
+        </Stack>
+      </TabPanel>
+    </Tabs>
+  );
 
   return (
     <Box sx={{ maxWidth: 1200, mx: "auto", p: { xs: 2, md: 3 } }}>
@@ -314,7 +1051,7 @@ const AddProductPage: React.FC = () => {
       </Typography>
 
       {error && (
-        <Alert color="danger" sx={{ mb: 3 }}>
+        <Alert color="danger" startDecorator={<ErrorIcon />} sx={{ mb: 3 }}>
           {error}
         </Alert>
       )}
@@ -332,350 +1069,15 @@ const AddProductPage: React.FC = () => {
       <Card variant="outlined">
         <CardContent>
           <form onSubmit={handleSubmit}>
-            <Grid container spacing={3}>
-              {/* Left Column - Basic Info */}
-              <Grid xs={12} md={8}>
-                <Stack spacing={3}>
-                  {/* Product Name */}
-                  <FormControl error={!!errors.name}>
-                    <FormLabel>Product Name *</FormLabel>
-                    <Input
-                      name="name"
-                      value={productData.name}
-                      onChange={handleInputChange}
-                      placeholder="Enter product name"
-                    />
-                    {errors.name && (
-                      <FormHelperText>{errors.name}</FormHelperText>
-                    )}
-                  </FormControl>
+            {/* Desktop layout (hidden on small screens) */}
+            <Box sx={{ display: { xs: "none", md: "block" } }}>
+              {renderDesktopContent()}
+            </Box>
 
-                  {/* Description */}
-                  <FormControl>
-                    <FormLabel>Description</FormLabel>
-                    <Textarea
-                      name="description"
-                      value={productData.description}
-                      onChange={handleInputChange}
-                      minRows={4}
-                      placeholder="Enter product description"
-                    />
-                  </FormControl>
-
-                  {/* Categories */}
-                  <FormControl>
-                    <FormLabel>Categories</FormLabel>
-                    <Select
-                      multiple
-                      placeholder="Select categories"
-                      value={productData.categories}
-                      onChange={handleCategoryChange}
-                      renderValue={(selected) => (
-                        <Box
-                          sx={{
-                            display: "flex",
-                            gap: "0.25rem",
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          {selected.map((categoryName, index) => (
-                            <Chip
-                              variant="soft"
-                              key={categoryName.value || index}
-                            >
-                              {categoryName.value}
-                            </Chip>
-                          ))}
-                        </Box>
-                      )}
-                    >
-                      {categories.map((category) => (
-                        <Option key={category.id} value={category.name}>
-                          {category.name}
-                        </Option>
-                      ))}
-                    </Select>
-                    <FormHelperText>
-                      Select one or more categories
-                    </FormHelperText>
-                  </FormControl>
-
-                  <Divider />
-
-                  {/* Price Information */}
-                  <Typography
-                    level="title-md"
-                    startDecorator={<AttachMoneyIcon />}
-                  >
-                    Pricing Information
-                  </Typography>
-
-                  <Grid container spacing={2}>
-                    {/* Retail Price */}
-                    <Grid xs={12} sm={6}>
-                      <FormControl error={!!errors.retailPrice}>
-                        <FormLabel>Retail Price (Rp) *</FormLabel>
-                        <Input
-                          name="retailPrice"
-                          type="number"
-                          value={productData.retailPrice}
-                          onChange={handleInputChange}
-                          slotProps={{
-                            input: {
-                              min: 0,
-                              step: 1000,
-                            },
-                          }}
-                          startDecorator="Rp"
-                        />
-                        {errors.retailPrice && (
-                          <FormHelperText>{errors.retailPrice}</FormHelperText>
-                        )}
-                      </FormControl>
-                    </Grid>
-
-                    {/* Wholesale Price */}
-                    <Grid xs={12} sm={6}>
-                      <FormControl>
-                        <FormLabel>Wholesale Price (Rp)</FormLabel>
-                        <Input
-                          name="wholesalePrice"
-                          type="number"
-                          value={productData.wholesalePrice}
-                          onChange={handleInputChange}
-                          slotProps={{
-                            input: {
-                              min: 0,
-                              step: 1000,
-                            },
-                          }}
-                          startDecorator="Rp"
-                        />
-                        <FormHelperText>
-                          Leave at 0 if not applicable
-                        </FormHelperText>
-                      </FormControl>
-                    </Grid>
-
-                    {/* Min Wholesale Quantity */}
-                    <Grid xs={12} sm={6}>
-                      <FormControl>
-                        <FormLabel>Min. Wholesale Quantity</FormLabel>
-                        <Input
-                          name="minWholesaleQty"
-                          type="number"
-                          value={productData.minWholesaleQty}
-                          onChange={handleInputChange}
-                          slotProps={{
-                            input: {
-                              min: 0,
-                            },
-                          }}
-                        />
-                      </FormControl>
-                    </Grid>
-                  </Grid>
-
-                  <Divider />
-
-                  {/* Inventory Information */}
-                  <Typography
-                    level="title-md"
-                    startDecorator={<InventoryIcon />}
-                  >
-                    Inventory Information
-                  </Typography>
-
-                  <Grid container spacing={2}>
-                    {/* SKU */}
-                    <Grid xs={12} sm={6}>
-                      <FormControl>
-                        <FormLabel>SKU</FormLabel>
-                        <Input
-                          name="sku"
-                          value={productData.sku}
-                          onChange={handleInputChange}
-                          placeholder="Product SKU"
-                          endDecorator={
-                            <IconButton
-                              variant="plain"
-                              onClick={generateSKU}
-                              title="Generate SKU"
-                            >
-                              <QrCodeIcon />
-                            </IconButton>
-                          }
-                        />
-                        <FormHelperText>
-                          Leave blank to auto-generate or click icon to generate
-                        </FormHelperText>
-                      </FormControl>
-                    </Grid>
-
-                    {/* Stock Quantity */}
-                    <Grid xs={12} sm={6}>
-                      <FormControl error={!!errors.quantityInStock}>
-                        <FormLabel>Initial Stock *</FormLabel>
-                        <Input
-                          name="quantityInStock"
-                          type="number"
-                          value={productData.quantityInStock}
-                          onChange={handleInputChange}
-                          slotProps={{
-                            input: {
-                              min: 0,
-                            },
-                          }}
-                        />
-                        {errors.quantityInStock && (
-                          <FormHelperText>
-                            {errors.quantityInStock}
-                          </FormHelperText>
-                        )}
-                      </FormControl>
-                    </Grid>
-
-                    {/* Minimum Stock */}
-                    <Grid xs={12} sm={6}>
-                      <FormControl>
-                        <FormLabel>Minimum Stock Level</FormLabel>
-                        <Input
-                          name="minimumStock"
-                          type="number"
-                          value={productData.minimumStock}
-                          onChange={handleInputChange}
-                          slotProps={{
-                            input: {
-                              min: 0,
-                            },
-                          }}
-                        />
-                        <FormHelperText>
-                          Stock level at which to reorder
-                        </FormHelperText>
-                      </FormControl>
-                    </Grid>
-                  </Grid>
-                </Stack>
-              </Grid>
-
-              {/* Right Column - Images */}
-              <Grid xs={12} md={4}>
-                <Card variant="outlined">
-                  <Box sx={{ p: 2 }}>
-                    <Typography level="title-md">Product Images</Typography>
-                    <Typography level="body-sm">
-                      Upload images of your product (max 5)
-                    </Typography>
-                  </Box>
-
-                  <Divider />
-
-                  <Stack spacing={2} sx={{ p: 2 }}>
-                    {/* Upload progress */}
-                    {uploading && (
-                      <Box sx={{ width: "100%" }}>
-                        <Typography level="body-sm" sx={{ mb: 1 }}>
-                          Uploading images: {uploadProgress}%
-                        </Typography>
-                        <LinearProgress
-                          determinate
-                          value={uploadProgress}
-                          sx={{ my: 1 }}
-                        />
-                      </Box>
-                    )}
-
-                    {/* Upload error */}
-                    {uploadError && (
-                      <Alert
-                        color="danger"
-                        startDecorator={<ErrorIcon />}
-                        sx={{ mt: 1, mb: 2 }}
-                        size="sm"
-                      >
-                        {uploadError}
-                      </Alert>
-                    )}
-
-                    {/* Image previews */}
-                    {imagesPreviews.length > 0 ? (
-                      <Stack spacing={2}>
-                        {imagesPreviews.map((preview, index) => (
-                          <Card key={index} variant="outlined">
-                            <AspectRatio ratio="1" objectFit="contain">
-                              <img
-                                src={preview}
-                                alt={`Product preview ${index + 1}`}
-                                loading="lazy"
-                              />
-                            </AspectRatio>
-                            <Box
-                              sx={{
-                                p: 1,
-                                display: "flex",
-                                justifyContent: "flex-end",
-                              }}
-                            >
-                              <IconButton
-                                color="danger"
-                                variant="plain"
-                                onClick={() => handleRemoveImage(index)}
-                              >
-                                <DeleteIcon />
-                              </IconButton>
-                            </Box>
-                          </Card>
-                        ))}
-                      </Stack>
-                    ) : (
-                      <Sheet
-                        variant="outlined"
-                        sx={{
-                          borderRadius: "md",
-                          p: 3,
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          gap: 2,
-                        }}
-                      >
-                        <AddPhotoAlternateIcon
-                          sx={{ fontSize: 48, color: "neutral.500" }}
-                        />
-                        <Typography level="body-sm" textAlign="center">
-                          Drag and drop images here or click to browse
-                        </Typography>
-                      </Sheet>
-                    )}
-
-                    {/* Image upload button */}
-                    <Button
-                      variant="soft"
-                      component="label"
-                      startDecorator={<AddPhotoAlternateIcon />}
-                      disabled={imageFiles.length >= 5 || uploading}
-                    >
-                      {imageFiles.length > 0
-                        ? "Add More Images"
-                        : "Upload Images"}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={handleImageSelect}
-                        style={{ display: "none" }}
-                        disabled={imageFiles.length >= 5}
-                      />
-                    </Button>
-
-                    <FormHelperText>
-                      Supported formats: JPG, PNG. Max size: 5MB per image.
-                    </FormHelperText>
-                  </Stack>
-                </Card>
-              </Grid>
-            </Grid>
+            {/* Mobile layout (tabbed interface, shown only on small screens) */}
+            <Box sx={{ display: { xs: "block", md: "none" } }}>
+              {renderMobileContent()}
+            </Box>
 
             <Divider sx={{ my: 4 }} />
 

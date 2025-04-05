@@ -54,9 +54,14 @@ export class ImageController {
     try {
       const { rename } = req.body;
       if (!req.file) {
-        return sendResponse(res, 400, "error", "Tidak ada file yang diupload");
+        return sendResponse({
+          res,
+          statusCode: 400,
+          status: "error",
+          message: "Tidak ada file yang diupload",
+        });
       }
-      
+
       // Parse opsi kompresi dari query parameters
       const compressionOptions = this.parseCompressionOptions(req);
 
@@ -76,12 +81,12 @@ export class ImageController {
       // Dapatkan URL gambar
       const imageUrl = this.imageService.getImageUrl(processResult.filename);
 
-      return sendResponse(
+      return sendResponse({
         res,
-        200,
-        "success",
-        "Gambar berhasil diupload dan diproses",
-        {
+        statusCode: 200,
+        status: "success",
+        message: "Gambar berhasil diupload dan diproses",
+        data: {
           filename: processResult.filename,
           imageUrl,
           format: processResult.format,
@@ -90,20 +95,20 @@ export class ImageController {
           size: processResult.size,
           originalSize: processResult.originalSize,
           compressionRatio: `${processResult.compressionRatio.toFixed(2)}%`,
-        }
-      );
+        },
+      });
     } catch (error) {
       console.error("Error saat upload:", error);
       // Hapus file temporary jika ada error
       if (req.file && fs.existsSync(req.file.path)) {
         fs.unlinkSync(req.file.path);
       }
-      return sendResponse(
+      return sendResponse({
         res,
-        500,
-        "error",
-        "Gagal mengupload dan memproses gambar"
-      );
+        statusCode: 500,
+        status: "error",
+        message: "Gagal mengupload dan memproses gambar",
+      });
     }
   };
 
@@ -115,19 +120,39 @@ export class ImageController {
       const { filename } = req.params;
 
       if (!filename) {
-        return sendResponse(res, 400, "error", "Filename tidak diberikan");
+        return sendResponse({
+          res,
+          statusCode: 400,
+          status: "error",
+          message: "Filename tidak diberikan",
+        });
       }
 
       const deleted = await this.imageService.deleteImage(filename);
 
       if (deleted) {
-        return sendResponse(res, 200, "success", "Gambar berhasil dihapus");
+        return sendResponse({
+          res,
+          statusCode: 200,
+          status: "success",
+          message: "Gambar berhasil dihapus",
+        });
       } else {
-        return sendResponse(res, 404, "error", "Gambar tidak ditemukan");
+        return sendResponse({
+          res,
+          statusCode: 404,
+          status: "error",
+          message: "Gambar tidak ditemukan",
+        });
       }
     } catch (error) {
       console.error("Error saat menghapus:", error);
-      return sendResponse(res, 500, "error", "Gagal menghapus gambar");
+      return sendResponse({
+        res,
+        statusCode: 500,
+        status: "error",
+        message: "Gagal menghapus gambar",
+      });
     }
   };
 }

@@ -9,14 +9,10 @@ import {
   IconButton,
   Divider,
 } from "@mui/joy";
-
-interface Category {
-  id: number;
-  name: string;
-}
+import { CategoryDTO } from "../dto/category.dto";
 
 interface FooterProps {
-  categories?: Category[];
+  categories?: CategoryDTO[];
 }
 
 export default function Footer({ categories }: FooterProps) {
@@ -32,7 +28,7 @@ export default function Footer({ categories }: FooterProps) {
     >
       <Container maxWidth="lg">
         <Grid container spacing={4}>
-          <Grid xs={12} sm={6} md={3}>
+          <Grid xs={6} sm={6} md={3}>
             <Typography level="title-lg" sx={{ mb: 2 }}>
               Jaya Junior Tools
             </Typography>
@@ -42,44 +38,8 @@ export default function Footer({ categories }: FooterProps) {
               Anda.
             </Typography>
           </Grid>
-          {/* Tampilkan kategori jika ada */}
-          {categories && (
-            <Grid xs={12} sm={6} md={3}>
-              <Typography level="title-md" sx={{ mb: 2 }}>
-                Kategori
-              </Typography>
-              <Stack spacing={1}>
-                {categories.map((category) => (
-                  <Link key={category.id} level="body-sm" color="neutral">
-                    {category.name}
-                  </Link>
-                ))}
-              </Stack>
-            </Grid>
-          )}
-          <Grid xs={12} sm={6} md={3}>
-            <Typography level="title-md" sx={{ mb: 2 }}>
-              Bantuan
-            </Typography>
-            <Stack spacing={1}>
-              <Link level="body-sm" color="neutral">
-                Cara Berbelanja
-              </Link>
-              <Link level="body-sm" color="neutral">
-                Pengiriman
-              </Link>
-              <Link level="body-sm" color="neutral">
-                Pengembalian
-              </Link>
-              <Link level="body-sm" color="neutral">
-                Pembayaran
-              </Link>
-              <Link level="body-sm" color="neutral">
-                FAQ
-              </Link>
-            </Stack>
-          </Grid>
-          <Grid xs={12} sm={6} md={3}>
+
+          <Grid xs={6} sm={6} md={3}>
             <Typography level="title-md" sx={{ mb: 2 }}>
               Hubungi Kami
             </Typography>

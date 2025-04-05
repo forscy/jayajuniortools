@@ -12,8 +12,8 @@ datasource db {
 model User {
   id        Int        @id @default(autoincrement())
   name      String
-  email     String     @unique
-  password  String
+  email     String?    @unique
+  password  String? // null able karena tidak semua pembeli harus buat akun
   status    UserStatus @default(ACTIVE)
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -21,6 +21,8 @@ model User {
 
   wishlist Wishlist[]
   reviews  Review[] // Relasi ke review yang dibuat user
+  Maker    Order[]
+  Cart     Cart[]
 }
 
 enum UserStatus {
@@ -65,7 +67,9 @@ model Product {
   brand   Brand? @relation(fields: [brandId], references: [id])
   brandId Int?
 
-  reviews Review[] // Relasi ke review produk
+  reviews   Review[] // Relasi ke review produk
+  OrderItem OrderItem[]
+  Cart      Cart[]
 }
 
 enum ProductStatus {
@@ -116,10 +120,10 @@ model Review {
 
   product   Product @relation(fields: [productId], references: [id])
   productId Int
-  user      User    @relation(fields: [email], references: [email])
-  email     String // Email user yang membuat review
+  user      User    @relation(fields: [userId], references: [id])
+  userId    Int // Id user yang membuat review
 
-  @@unique([email, productId]) // Setiap user hanya bisa review produk sekali
+  @@unique([userId, productId]) // Setiap user hanya bisa review produk sekali
 }
 
 // Tabel diskon produk
@@ -174,8 +178,8 @@ model Wishlist {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
 
-  user  User   @relation(fields: [email], references: [email])
-  email String
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
   // product Product @relation(fields: [productId], references: [id])
   // productId Int
 
@@ -201,4 +205,99 @@ enum Day {
   SUNDAY
 }
 
-// ORDER and TRANSACTION
+// ORDER
+model Order {
+  id          Int         @id @default(autoincrement())
+  status      OrderStatus @default(PENDING) // Status order (PENDING, COMPLETED, CANCELLED)
+  totalAmount Float // Total harga order
+  createdAt   DateTime    @default(now()) // Waktu saat order dibuat
+  updatedAt   DateTime    @updatedAt // Waktu saat order terakhir diperbarui
+  payment     Payment?
+  paymentId   Int?        @unique
+
+  maker      String?
+  emailMaker String?
+
+  user   User @relation(fields: [userId], references: [id]) // Relasi ke tabel User
+  userId Int // ID pengguna yang membuat order
+
+  items OrderItem[] // Relasi ke order items yang terkait dengan produk
+}
+
+enum OrderStatus {
+  PENDING // Order baru dibuat, menunggu pembayaran
+  COMPLETED // Order selesai, dibayar dan siap diambil
+  CANCELLED // Order dibatalkan
+  FAILED // Pembayaran gagal atau order gagal diproses
+  PACKAGING // Pesanan sedang dikemas
+  READY_FOR_PICKUP // Pesanan siap untuk diambil
+}
+
+model OrderItem {
+  id         Int   @id @default(autoincrement())
+  quantity   Int // Jumlah produk yang dibeli
+  unitPrice  Float // Harga per unit produk pada saat transaksi
+  totalPrice Float // Harga total untuk produk tersebut (unitPrice * quantity)
+
+  order     Order   @relation(fields: [orderId], references: [id]) // Relasi ke Order
+  orderId   Int // ID order yang berhubungan
+  product   Product @relation(fields: [productId], references: [id]) // Relasi ke Product
+  productId Int // ID produk yang dibeli
+}
+
+// PAYMENT
+model Payment {
+  id           Int   @id @default(autoincrement())
+  amount       Float // Jumlah yang dibayar
+  amountPaid   Float // Jumlah uang yang dibayarkan (opsional, jika menggunakan metode pembayaran tunai)
+  amountChange Float // Jumlah uang kembalian (opsional, jika menggunakan metode pembayaran tunai)
+
+  paymentDate   DateTime? // Tanggal pembayaran (opsional, jika tidak menggunakan metode pembayaran langsung)
+  paymentStatus PaymentStatus @default(PENDING) // Status pembayaran (PENDING, COMPLETED, FAILED)
+
+  createdAt DateTime @default(now()) // Waktu saat pembayaran dimulai
+  updatedAt DateTime @updatedAt // Waktu saat pembayaran terakhir diperbarui
+
+  order   Order @relation(fields: [orderId], references: [id]) // Relasi ke Order
+  orderId Int   @unique // ID order yang berhubungan
+
+  receiver   PaymentReceiver @relation(fields: [receiverId], references: [id])
+  receiverId Int // Referensi ke PaymentReceiver (penerima pembayaran)
+}
+
+enum PaymentStatus {
+  PENDING // Pembayaran belum diproses
+  COMPLETED // Pembayaran telah berhasil
+  FAILED // Pembayaran gagal
+}
+
+model PaymentReceiver {
+  id                Int           @id @default(autoincrement()) // ID penerima pembayaran
+  method            PaymentMethod // Metode pembayaran (bank, e-wallet, cash)
+  provider          String // Nama provider (bank atau penyedia e-wallet)
+  accountNumber     String // Nomor akun (rekening bank atau nomor e-wallet)
+  accountHolderName String // Nama pemilik akun (rekening bank atau akun e-wallet)
+  createdAt         DateTime      @default(now()) // Waktu saat penerima pembayaran dibuat
+  updatedAt         DateTime      @updatedAt // Waktu saat penerima pembayaran diperbarui
+
+  payments Payment[] // Relasi ke tabel Payment (pembayaran yang diterima)
+}
+
+enum PaymentMethod {
+  BANK // Pembayaran melalui bank
+  E_WALLET // Pemb_
+  CASH // Pembayaran tunai
+}
+
+// CART
+model Cart {
+  id        Int      @id @default(autoincrement())
+  quantity  Int // Jumlah produk dalam keranjang
+  createdAt DateTime @default(now()) // Waktu saat produk ditambahkan ke keranjang
+  updatedAt DateTime @updatedAt // Waktu saat produk terakhir diperbarui dalam keranjang
+
+  user      User    @relation(fields: [userId], references: [id]) // Relasi ke User
+  userId    Int // ID pengguna yang menambahkan produk ke keranjang
+  product   Product @relation(fields: [productId], references: [id]) // Relasi ke Product
+  productId Int // ID produk dalam keranjang
+}

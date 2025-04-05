@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import categoryController from "../../controllers/CategoryController";
-import { CategoryDTO } from "../../dto/CategoryDTO";
+import { CategoryDTO } from "../../dto/category.dto";
 
 // Define the state interface
 interface CategoryState {

@@ -19,9 +19,10 @@ import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { fetchProducts } from "../redux/slices/productSlice";
 import Header from "../components/Header";
 // Di bagian atas file, tambahkan import untuk gambar default
-import { ProductCard } from "../components/ProductCard";
+import { ProductCard } from "../components/ProductCardNew";
 import Footer from "../components/Footer";
-import { ProductDTO } from "../dto/ProductDTO";
+import { ProductDTO } from "../dto/product.dto";
+import { useNavigate } from "react-router-dom";
 
 // Custom Pagination Component with Joy UI
 const CustomPagination: React.FC<{
@@ -250,6 +251,7 @@ const FilterBar: React.FC<{
 
 // Main Page Component
 const ProductsPage: React.FC = () => {
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { products, loading, error } = useAppSelector((state) => state.product);
 
@@ -382,6 +384,13 @@ const ProductsPage: React.FC = () => {
                 <Grid key={product.id} xs={6} sm={4} md={3}>
                   <ProductCard
                     product={product}
+                    onClickEye={() => {
+                      console.log(
+                        "Product clicked, navigating to:",
+                        product.id
+                      );
+                      navigate(`/products/${product.id}`);
+                    }}
                     // onAddToCart={handleAddToCart}
                     // onToggleFavorite={handleToggleFavorite}
                     // isFavorite={favorites.includes(product.id)}

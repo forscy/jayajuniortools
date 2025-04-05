@@ -3,9 +3,10 @@ import {
   createAsyncThunk,
   PayloadAction,
 } from "@reduxjs/toolkit";
-import { AuthState, User } from "../../types";
+import { AuthState } from "../state/AuthState";
 import authController from "../../controllers/AuthController";
 import * as localStorageUtil from "../../utils/localStorageUtil";
+import { UserDTO } from "../../dto/user.dto";
 
 // Initial state
 const initialState: AuthState = {
@@ -120,7 +121,7 @@ const authSlice = createSlice({
       checkAuthenticated.fulfilled,
       (
         state,
-        action: PayloadAction<{ isAuthenticated: boolean; user: User, token: string }>
+        action: PayloadAction<{ isAuthenticated: boolean; user: UserDTO, token: string }>
       ) => {
         state.isAuthenticated = action.payload.isAuthenticated;
         state.user = action.payload.user;
@@ -140,7 +141,7 @@ const authSlice = createSlice({
     });
     builder.addCase(
       signIn.fulfilled,
-      (state, action: PayloadAction<{ token: string, user: User }>) => {
+      (state, action: PayloadAction<{ token: string, user: UserDTO }>) => {
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload.user;
@@ -159,7 +160,7 @@ const authSlice = createSlice({
     });
     builder.addCase(
       signUp.fulfilled,
-      (state, action: PayloadAction<{ token: string; user: User }>) => {
+      (state, action: PayloadAction<{ token: string; user: UserDTO }>) => {
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload.user;
@@ -177,7 +178,7 @@ const authSlice = createSlice({
     });
     builder.addCase(
       loadUser.fulfilled,
-      (state, action: PayloadAction<User>) => {
+      (state, action: PayloadAction<UserDTO>) => {
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload;

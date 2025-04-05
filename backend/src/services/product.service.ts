@@ -1,6 +1,6 @@
 import { ProductStatus } from "@prisma/client";
 import { prisma } from "../config/client.config";
-import { ProductDTO } from "../dto/ProductDTO";
+import { ProductDTO } from "../dto/product.dto";
 import { Pagination } from "../utils/responseWrapper";
 
 // Helper function to handle category creation and linking
@@ -45,6 +45,7 @@ export const createOrUpdateProduct = async (
 ) => {
   const {
     name,
+    productStatus,
     description,
     retailPrice,
     wholesalePrice,
@@ -91,6 +92,7 @@ export const createOrUpdateProduct = async (
           where: { id },
           data: {
             name,
+            productStatus,
             description,
             retailPrice,
             wholesalePrice,
@@ -152,6 +154,7 @@ export const createOrUpdateProduct = async (
         const newProduct = await tx.product.create({
           data: {
             name,
+            productStatus,
             description,
             retailPrice,
             wholesalePrice,
@@ -328,22 +331,24 @@ export const hardDeleteProductById = async (id: number) => {
 // DELETE BUT BY CHANGE STATUS TO DELETED
 export const softDeleteProductById = async (id: number) => {
   try {
-    const product = await prisma.product.update({
+    // Check if the product exists first
+    const productExists = await prisma.product.findUnique({
       where: { id },
-      data: {
-        productStatus: ProductStatus.DELETED,
-        updatedAt: new Date(),
-      },
-
-      // include: {
-      //   categories: { include: { category: true } },
-      //   imageUrls: true,
-      //   discount: true,
-      //   brand: true,
-      // },
     });
 
-    return mapProductToDTO(product);
+    if (!productExists) {
+      throw new Error("Product not found");
+    }
+
+    // Proceed to update the product (soft delete by changing status)
+    const updatedProduct = await prisma.product.update({
+      where: { id },
+      data: {
+        productStatus: "DELETED", // Mark the product as deleted
+      },
+    });
+
+    return mapProductToDTO(updatedProduct);
   } catch (error: any) {
     console.error("Error soft deleting product:", error);
     throw new Error(error.message || "Failed to soft delete product");

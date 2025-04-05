@@ -12,7 +12,7 @@ import {
 
 const router = Router();
 
-//
+// Create a new product
 router.post(
   "/",
   authenticateJWT,
