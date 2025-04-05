@@ -2,7 +2,11 @@
 import bcrypt, { compare } from "bcryptjs";
 import { prisma } from "../config/client.config";
 import { Role, UserStatus } from "@prisma/client";
-import { comparePassword, generateToken, hashPassword } from "../utils/auth";
+import {
+  comparePassword,
+  generateToken,
+  hashPassword,
+} from "../utils/auth.util";
 
 export const signUpService = async (
   name: string,
@@ -52,7 +56,7 @@ export const signInService = async (email: string, password: string) => {
       throw new Error("User not found");
     }
 
-    const isMatch = await comparePassword(password, user.password);
+    const isMatch = await comparePassword(password, user.password!);
 
     if (!isMatch) {
       throw new Error("Invalid credentials");
@@ -86,7 +90,7 @@ export const changePasswordService = async (
     }
 
     // Cek apakah password lama cocok
-    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    const isMatch = await bcrypt.compare(oldPassword, user.password!);
 
     if (!isMatch) {
       throw new Error("Old password is incorrect");
@@ -198,7 +202,7 @@ export const deleteAccountService = async ({ email }: DeleteAccountData) => {
 
     await prisma.wishlist.deleteMany({
       where: {
-        email: user.email,
+        userId: user.id,
       },
     });
 

@@ -6,9 +6,20 @@ import { sendResponse } from "../utils/responseWrapper";
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
     const users = await userService.getAllUsers();
-    return sendResponse(res, 200, "success", "All users", users);
+    return sendResponse({
+      res,
+      statusCode: 200,
+      status: "success",
+      message: "All users",
+      data: users,
+    });
   } catch (error: any) {
-    return sendResponse(res, 400, "error", error.message);
+    return sendResponse({
+      res,
+      statusCode: 400,
+      status: "error",
+      message: error.message,
+    });
   }
 };
 
@@ -18,8 +29,19 @@ export const getUserByEmail = async (req: Request, res: Response) => {
 
   try {
     const user = await userService.getUserByEmail(email);
-    return sendResponse(res, 200, "success", "User found", user);
+    return sendResponse({
+      res,
+      statusCode: 200,
+      status: "success",
+      message: "User found",
+      data: user,
+    });
   } catch (error: any) {
-    return sendResponse(res, 400, "error", error.message);
+    return sendResponse({
+      res,
+      statusCode: 400,
+      status: "error",
+      message: error.message,
+    });
   }
 };

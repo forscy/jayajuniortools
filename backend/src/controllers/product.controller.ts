@@ -7,15 +7,20 @@ import { ProductStatus } from "@prisma/client";
 export const createProduct = async (req: Request, res: Response) => {
   try {
     const product = await productService.createOrUpdateProduct(req.body);
-    return sendResponse(
+    return sendResponse({
       res,
-      201,
-      "success",
-      "Product created successfully",
-      product
-    );
+      statusCode: 201,
+      status: "success",
+      message: "Product created successfully",
+      data: product,
+    });
   } catch (error: any) {
-    return sendResponse(res, 400, "error", error.message);
+    return sendResponse({
+      res,
+      statusCode: 400,
+      status: "error",
+      message: error.message,
+    });
   }
 };
 
@@ -25,15 +30,20 @@ export const updateProduct = async (req: Request, res: Response) => {
 
   try {
     const product = await productService.createOrUpdateProduct(req.body, id);
-    return sendResponse(
+    return sendResponse({
       res,
-      200,
-      "success",
-      "Product updated successfully",
-      product
-    );
+      statusCode: 200,
+      status: "success",
+      message: "Product updated successfully",
+      data: product,
+    });
   } catch (error: any) {
-    return sendResponse(res, 400, "error", error.message);
+    return sendResponse({
+      res,
+      statusCode: 400,
+      status: "error",
+      message: error.message,
+    });
   }
 };
 
@@ -47,16 +57,21 @@ export const getProducts = async (req: Request, res: Response) => {
       page,
       limit
     );
-    return sendResponse(
+    return sendResponse({
       res,
-      200,
-      "success",
-      "Products retrieved successfully",
-      products,
-      pagination
-    );
+      statusCode: 200,
+      status: "success",
+      message: "Products retrieved successfully",
+      data: products,
+      pagination,
+    });
   } catch (error: any) {
-    return sendResponse(res, 400, "error", error.message);
+    return sendResponse({
+      res,
+      statusCode: 400,
+      status: "error",
+      message: error.message,
+    });
   }
 };
 
@@ -74,16 +89,21 @@ export const getProductsAvailableAndCommingSoon = async (
       limit,
       [ProductStatus.AVAILABLE, ProductStatus.COMMING_SOON]
     );
-    return sendResponse(
+    return sendResponse({
       res,
-      200,
-      "success",
-      "Products retrieved successfully",
-      products,
-      pagination
-    );
+      statusCode: 200,
+      status: "success",
+      message: "Products retrieved successfully",
+      data: products,
+      pagination,
+    });
   } catch (error: any) {
-    return sendResponse(res, 400, "error", error.message);
+    return sendResponse({
+      res,
+      statusCode: 400,
+      status: "error",
+      message: error.message,
+    });
   }
 };
 
@@ -93,54 +113,65 @@ export const getProductById = async (req: Request, res: Response) => {
 
   try {
     const product = await productService.getProductById(id);
-    return sendResponse(
+    return sendResponse({
       res,
-      200,
-      "success",
-      "Product retrieved successfully",
-      product
-    );
+      statusCode: 200,
+      status: "success",
+      message: "Product retrieved successfully",
+      data: product,
+    });
   } catch (error: any) {
-    return sendResponse(res, 400, "error", error.message);
+    return sendResponse({
+      res,
+      statusCode: 400,
+      status: "error",
+      message: error.message,
+    });
   }
 };
-
 
 // Hard delete product by id
 export const hardDeleteProductById = async (req: Request, res: Response) => {
   const id = parseInt(req.params.id);
-  
+
   try {
     const statusDelete = await productService.hardDeleteProductById(id);
-    return sendResponse(
+    return sendResponse({
       res,
-      200,
-      "success",
-      "Product hard deleted successfully",
-      statusDelete
-    );
+      statusCode: 200,
+      status: "success",
+      message: "Product hard deleted successfully",
+      data: statusDelete,
+    });
   } catch (error: any) {
-    return sendResponse(res, 400, "error", error.message);
+    return sendResponse({
+      res,
+      statusCode: 400,
+      status: "error",
+      message: error.message,
+    });
   }
-  
-}
+};
 
 // Soft delete product by id
 export const softDeleteProductById = async (req: Request, res: Response) => {
   const id = parseInt(req.params.id);
-  
+
   try {
     const statusDelete = await productService.softDeleteProductById(id);
-    return sendResponse(
+    return sendResponse({
       res,
-      200,
-      "success",
-      "Product soft deleted successfully",
-      statusDelete
-    );
+      statusCode: 200,
+      status: "success",
+      message: "Product soft deleted successfully",
+      data: statusDelete,
+    });
   } catch (error: any) {
-    return sendResponse(res, 400, "error", error.message);
+    return sendResponse({
+      res,
+      statusCode: 400,
+      status: "error",
+      message: error.message,
+    });
   }
-  
-}
-
+};
